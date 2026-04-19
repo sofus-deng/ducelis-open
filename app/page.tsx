@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const principles = [
   {
     title: "Local-first by default",
@@ -45,6 +47,12 @@ export default function Home() {
             text-first practice experience while keeping the direction honest,
             public-safe, and small.
           </p>
+          <Link
+            href="/scenarios"
+            className="inline-flex w-fit items-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-[var(--foreground)] shadow-[0_12px_32px_rgba(15,23,42,0.2)] transition hover:-translate-y-0.5"
+          >
+            Browse public-safe scenarios
+          </Link>
         </div>
       </section>
 
