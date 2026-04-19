@@ -33,8 +33,8 @@ const nextFocus = [
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-10 sm:px-10 lg:px-12">
-      <section className="rounded-3xl border border-white/12 bg-[var(--panel)] px-6 py-14 shadow-[0_24px_80px_rgba(15,23,42,0.18)] sm:px-10 lg:px-14">
-        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-50/82">
+      <section className="rounded-3xl border border-[color:rgba(255,255,255,0.16)] bg-[var(--panel)] px-6 py-14 shadow-[0_24px_80px_rgba(35,52,84,0.22)] sm:px-10 lg:px-14">
+        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--panel-muted)]">
           Ducelis Open
         </p>
         <div className="mt-6 max-w-3xl space-y-5 text-[var(--panel-foreground)]">
@@ -49,7 +49,7 @@ export default function Home() {
           </p>
           <Link
             href="/scenarios"
-            className="inline-flex w-fit items-center rounded-full border border-white/14 bg-white/96 px-5 py-3 text-sm font-semibold text-[var(--foreground)] shadow-[0_12px_32px_rgba(15,23,42,0.16)] transition duration-150 hover:border-white/70 hover:bg-white"
+            className="inline-flex w-fit items-center rounded-full border border-[var(--accent-strong)] bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_32px_rgba(35,68,127,0.22)] transition duration-150 hover:bg-[var(--accent-strong)]"
           >
             Browse public-safe scenarios
           </Link>
@@ -57,30 +57,30 @@ export default function Home() {
       </section>
 
       <section className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <article className="rounded-3xl border border-[var(--surface-border)] bg-[var(--surface)] p-7 shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+        <article className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7 shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur-sm">
           <h2 className="text-2xl font-semibold tracking-tight">
             What Ducelis Open is
           </h2>
-          <p className="mt-4 leading-8 text-[var(--muted)]">
+          <p className="mt-4 leading-8 text-[var(--secondary-foreground)]">
             Ducelis Open is a local-first public reference for rehearsal workflows
             that help people prepare for difficult conversations in a more
             structured way than generic chat. The current direction emphasizes a
             clear product surface, user-controlled local data, and stable runtime
             boundaries that can remain model-agnostic over time.
           </p>
-          <p className="mt-4 leading-8 text-[var(--muted)]">
+          <p className="mt-4 leading-8 text-[var(--secondary-foreground)]">
             Initial validation has focused on Gemma 4, but that is presented as a
             starting path rather than a permanent single-model assumption.
           </p>
         </article>
 
-        <article className="rounded-3xl border border-[var(--accent-border)] bg-[var(--accent-soft)] p-7 shadow-[0_18px_48px_rgba(14,116,144,0.10)]">
+        <article className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7 shadow-[0_18px_48px_rgba(35,68,127,0.08)]">
           <h2 className="text-2xl font-semibold tracking-tight">Current status</h2>
           <ul className="mt-5 space-y-4">
             {statusItems.map((item) => (
               <li
                 key={item}
-                className="rounded-2xl border border-[var(--accent-border)] bg-white/78 px-4 py-4 leading-7 text-[var(--muted-strong)]"
+                className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-4 leading-7 text-[var(--foreground)]"
               >
                 {item}
               </li>
@@ -89,16 +89,16 @@ export default function Home() {
         </article>
       </section>
 
-      <section className="mt-10 rounded-3xl border border-[var(--surface-border)] bg-[var(--surface)] p-7 shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+      <section className="mt-10 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7 shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur-sm">
         <h2 className="text-2xl font-semibold tracking-tight">Core principles</h2>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           {principles.map((principle) => (
             <article
               key={principle.title}
-              className="rounded-2xl border border-[var(--surface-border)] bg-[var(--surface-strong)] p-5"
+              className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] p-5"
             >
               <h3 className="text-lg font-semibold">{principle.title}</h3>
-              <p className="mt-3 leading-7 text-[var(--muted)]">
+              <p className="mt-3 leading-7 text-[var(--secondary-foreground)]">
                 {principle.description}
               </p>
             </article>
@@ -106,7 +106,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mt-10 rounded-3xl border border-[var(--surface-border)] bg-[var(--surface)] p-7 shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+      <section className="mt-10 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7 shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur-sm">
         <h2 className="text-2xl font-semibold tracking-tight">
           Next implementation focus
         </h2>
@@ -114,12 +114,12 @@ export default function Home() {
           {nextFocus.map((item, index) => (
             <li
               key={item}
-              className="flex gap-4 rounded-2xl border border-[var(--surface-border)] bg-[var(--surface-strong)] px-4 py-4"
+              className="flex gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-4"
             >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-semibold text-white">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-semibold text-white shadow-[0_8px_18px_rgba(47,90,166,0.18)]">
                 {index + 1}
               </span>
-              <span className="leading-7 text-[var(--muted-strong)]">{item}</span>
+              <span className="leading-7 text-[var(--foreground)]">{item}</span>
             </li>
           ))}
         </ol>
