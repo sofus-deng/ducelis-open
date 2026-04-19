@@ -5,11 +5,17 @@
   --foreground: #162033;
   --muted: #526076;
   --muted-strong: #2a3548;
-  --panel: linear-gradient(135deg, #0f172a 0%, #162033 50%, #0e7490 100%);
+  --panel: linear-gradient(135deg, #0b1220 0%, #162033 54%, #0f766e 100%);
+  --panel-foreground: #f8fbff;
+  --panel-muted: rgba(248, 250, 252, 0.84);
   --panel-subtle: #f8fbff;
   --accent: #0f766e;
   --accent-soft: #ecfeff;
   --accent-border: rgba(15, 118, 110, 0.18);
+  --surface: rgba(255, 255, 255, 0.86);
+  --surface-strong: rgba(255, 255, 255, 0.94);
+  --surface-border: rgba(15, 23, 42, 0.08);
+  --surface-border-strong: rgba(15, 23, 42, 0.12);
 }
 
 @theme inline {
