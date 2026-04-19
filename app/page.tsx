@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const principles = [
   {
@@ -46,34 +48,39 @@ export default function Home() {
             public-safe, and small.
           </p>
           <div className="hero-actions">
-            <Link href="/scenarios" className="hero-cta">
-              Browse public-safe scenarios
-            </Link>
+            <Button asChild>
+              <Link href="/scenarios">Browse public-safe scenarios</Link>
+            </Button>
           </div>
         </div>
       </section>
 
       <section className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <article className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7 shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur-sm">
-          <h2 className="text-2xl font-semibold tracking-tight">
-            What Ducelis Open is
-          </h2>
-          <p className="mt-4 leading-8 text-[var(--secondary-foreground)]">
-            Ducelis Open is a local-first public reference for rehearsal workflows
-            that help people prepare for difficult conversations in a more
-            structured way than generic chat. The current direction emphasizes a
-            clear product surface, user-controlled local data, and stable runtime
-            boundaries that can remain model-agnostic over time.
-          </p>
-          <p className="mt-4 leading-8 text-[var(--secondary-foreground)]">
-            Initial validation has focused on Gemma 4, but that is presented as a
-            starting path rather than a permanent single-model assumption.
-          </p>
-        </article>
+        <Card as="article">
+          <CardHeader>
+            <CardTitle as="h2">What Ducelis Open is</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <CardDescription>
+              Ducelis Open is a local-first public reference for rehearsal workflows
+              that help people prepare for difficult conversations in a more
+              structured way than generic chat. The current direction emphasizes a
+              clear product surface, user-controlled local data, and stable runtime
+              boundaries that can remain model-agnostic over time.
+            </CardDescription>
+            <CardDescription>
+              Initial validation has focused on Gemma 4, but that is presented as a
+              starting path rather than a permanent single-model assumption.
+            </CardDescription>
+          </CardContent>
+        </Card>
 
-        <article className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7 shadow-[0_18px_48px_rgba(35,68,127,0.08)]">
-          <h2 className="text-2xl font-semibold tracking-tight">Current status</h2>
-          <ul className="mt-5 space-y-4">
+        <Card as="article" tone="emphasis">
+          <CardHeader>
+            <CardTitle as="h2">Current status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-4">
             {statusItems.map((item) => (
               <li
                 key={item}
@@ -82,32 +89,40 @@ export default function Home() {
                 {item}
               </li>
             ))}
-          </ul>
-        </article>
+            </ul>
+          </CardContent>
+        </Card>
       </section>
 
-      <section className="mt-10 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7 shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur-sm">
-        <h2 className="text-2xl font-semibold tracking-tight">Core principles</h2>
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
+      <Card as="section" className="mt-10">
+        <CardHeader>
+          <CardTitle as="h2">Core principles</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-3">
           {principles.map((principle) => (
-            <article
+            <Card
               key={principle.title}
-              className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] p-5"
+              as="article"
+              tone="muted"
+              className="rounded-2xl p-5"
             >
-              <h3 className="text-lg font-semibold">{principle.title}</h3>
-              <p className="mt-3 leading-7 text-[var(--secondary-foreground)]">
+              <CardTitle as="h3" className="text-lg">{principle.title}</CardTitle>
+              <CardDescription className="mt-3 leading-7">
                 {principle.description}
-              </p>
-            </article>
+              </CardDescription>
+            </Card>
           ))}
-        </div>
-      </section>
+          </div>
+        </CardContent>
+      </Card>
 
-      <section className="mt-10 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7 shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur-sm">
-        <h2 className="text-2xl font-semibold tracking-tight">
-          Next implementation focus
-        </h2>
-        <ol className="mt-5 space-y-4">
+      <Card as="section" className="mt-10">
+        <CardHeader>
+          <CardTitle as="h2">Next implementation focus</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ol className="space-y-4">
           {nextFocus.map((item, index) => (
             <li
               key={item}
@@ -119,8 +134,9 @@ export default function Home() {
               <span className="leading-7 text-[var(--foreground)]">{item}</span>
             </li>
           ))}
-        </ol>
-      </section>
+          </ol>
+        </CardContent>
+      </Card>
     </main>
   );
 }

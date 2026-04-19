@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getScenarioById, scenarios } from "../../../content/scenarios";
 
 type ScenarioDetailPageProps = {
@@ -45,14 +48,12 @@ export default async function ScenarioDetailPage({
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-6 py-10 sm:px-10 lg:px-12">
       <section className="hero-panel hero-panel--compact">
         <div className="hero-actions">
-          <Link href="/scenarios" className="hero-link">
-            Back to scenarios
-          </Link>
+          <Button asChild variant="secondary" size="sm">
+            <Link href="/scenarios">Back to scenarios</Link>
+          </Button>
         </div>
         <div className="hero-stack hero-stack--compact">
-          <p className="hero-eyebrow">
-            {scenario.difficultyLabel}
-          </p>
+          <Badge variant="eyebrow">{scenario.difficultyLabel}</Badge>
           <h1 className="hero-title text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
             {scenario.title}
           </h1>
@@ -63,25 +64,32 @@ export default async function ScenarioDetailPage({
       </section>
 
       <section className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <article className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7 shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur-sm">
-          <h2 className="text-2xl font-semibold tracking-tight">
-            Summary and context
-          </h2>
-          <p className="mt-4 leading-8 text-[var(--secondary-foreground)]">{scenario.context}</p>
-        </article>
+        <Card as="article">
+          <CardHeader>
+            <CardTitle as="h2">Summary and context</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CardDescription>{scenario.context}</CardDescription>
+          </CardContent>
+        </Card>
 
-        <article className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7 shadow-[0_18px_48px_rgba(35,68,127,0.08)]">
-          <h2 className="text-2xl font-semibold tracking-tight">Focus</h2>
-          <p className="mt-4 leading-8 text-[var(--foreground)]">
-            {scenario.focus}
-          </p>
-        </article>
+        <Card as="article" tone="emphasis">
+          <CardHeader>
+            <CardTitle as="h2">Focus</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="leading-8 text-[var(--foreground)]">{scenario.focus}</p>
+          </CardContent>
+        </Card>
       </section>
 
       <section className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <article className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7 shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur-sm">
-          <h2 className="text-2xl font-semibold tracking-tight">Success criteria</h2>
-          <ul className="mt-5 space-y-4">
+        <Card as="article">
+          <CardHeader>
+            <CardTitle as="h2">Success criteria</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-4">
             {scenario.successCriteria.map((criterion) => (
               <li
                 key={criterion}
@@ -90,22 +98,21 @@ export default async function ScenarioDetailPage({
                 {criterion}
               </li>
             ))}
-          </ul>
-        </article>
+            </ul>
+          </CardContent>
+        </Card>
 
-        <article className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7 shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur-sm">
-          <h2 className="text-2xl font-semibold tracking-tight">
-            Current implementation note
-          </h2>
-          <p className="mt-4 leading-8 text-[var(--secondary-foreground)]">{scenario.statusNote}</p>
-          <button
-            type="button"
-            disabled
-            className="mt-6 inline-flex cursor-not-allowed items-center rounded-full border border-[var(--border)] bg-[var(--disabled-surface)] px-5 py-3 text-sm font-semibold text-[var(--disabled-foreground)] shadow-inner"
-          >
-            Rehearsal flow coming next
-          </button>
-        </article>
+        <Card as="article">
+          <CardHeader>
+            <CardTitle as="h2">Current implementation note</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CardDescription>{scenario.statusNote}</CardDescription>
+            <Button type="button" variant="disabled" disabled className="mt-6">
+              Rehearsal flow coming next
+            </Button>
+          </CardContent>
+        </Card>
       </section>
     </main>
   );

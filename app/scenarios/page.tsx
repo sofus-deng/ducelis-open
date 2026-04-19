@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { scenarios } from "../../content/scenarios";
 
 export default function ScenariosPage() {
@@ -6,7 +9,7 @@ export default function ScenariosPage() {
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-10 sm:px-10 lg:px-12">
       <section className="hero-panel">
         <div className="hero-stack">
-          <p className="hero-chip">Scenario library</p>
+          <Badge variant="eyebrow">Scenario library</Badge>
           <h1 className="hero-title text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
             Public-safe rehearsal scenarios for focused review.
           </h1>
@@ -19,38 +22,41 @@ export default function ScenariosPage() {
 
       <section className="mt-10 grid gap-6 md:grid-cols-2">
         {scenarios.map((scenario) => (
-          <article
+          <Card
             key={scenario.id}
+            as="article"
             data-testid="scenario-card"
-            className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-7 shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur-sm"
+            className="p-7"
           >
             <div className="flex items-center justify-between gap-4">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
+              <Badge variant="accent" className="text-xs font-semibold uppercase tracking-[0.2em] sm:text-sm">
                 {scenario.difficultyLabel}
-              </p>
-              <span className="rounded-full border border-[var(--border)] bg-[var(--surface-strong)] px-3 py-1 text-sm text-[var(--secondary-foreground)]">
+              </Badge>
+              <Badge>
                 3 review points
-              </span>
+              </Badge>
             </div>
-            <h2 className="mt-5 text-2xl font-semibold tracking-tight text-balance">
-              {scenario.title}
-            </h2>
-            <p className="mt-4 leading-7 text-[var(--secondary-foreground)]">
-              {scenario.shortSummary}
-            </p>
-            <p className="mt-5 text-sm leading-6 text-[var(--foreground)]">
-              <span className="font-semibold">Focus:</span> {scenario.focus}
-            </p>
-            <p className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-4 text-sm leading-6 text-[var(--foreground)]">
-              {scenario.statusNote}
-            </p>
-            <Link
-              href={`/scenarios/${scenario.id}`}
-              className="mt-6 inline-flex items-center rounded-full border border-[var(--accent-strong)] bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(35,68,127,0.18)] transition duration-150 hover:bg-[var(--accent-strong)]"
-            >
-              Open scenario
-            </Link>
-          </article>
+            <CardHeader className="px-0 pt-5 pb-0">
+              <CardTitle as="h2" className="text-balance">{scenario.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="px-0 pb-0 pt-4">
+              <CardDescription className="leading-7">
+                {scenario.shortSummary}
+              </CardDescription>
+              <p className="mt-5 text-sm leading-6 text-[var(--foreground)]">
+                <span className="font-semibold">Focus:</span> {scenario.focus}
+              </p>
+              <Card
+                tone="muted"
+                className="mt-4 rounded-2xl px-4 py-4 text-sm leading-6 text-[var(--foreground)]"
+              >
+                {scenario.statusNote}
+              </Card>
+              <Button asChild className="mt-6">
+                <Link href={`/scenarios/${scenario.id}`}>Open scenario</Link>
+              </Button>
+            </CardContent>
+          </Card>
         ))}
       </section>
     </main>
