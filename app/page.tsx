@@ -33,26 +33,23 @@ const nextFocus = [
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-10 sm:px-10 lg:px-12">
-      <section className="rounded-3xl border border-[color:rgba(255,255,255,0.16)] bg-[var(--panel)] px-6 py-14 shadow-[0_24px_80px_rgba(35,52,84,0.22)] sm:px-10 lg:px-14">
-        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--panel-muted)]">
-          Ducelis Open
-        </p>
-        <div className="mt-6 max-w-3xl space-y-5 text-[var(--panel-foreground)]">
-          <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+      <section className="hero-panel">
+        <div className="hero-stack">
+          <p className="hero-eyebrow">Ducelis Open</p>
+          <h1 className="hero-title text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
             A local-first rehearsal shell for high-stakes conversations.
           </h1>
-          <p className="max-w-2xl text-lg leading-8 text-[var(--panel-muted)] sm:text-xl">
+          <p className="hero-copy max-w-2xl text-lg leading-8 sm:text-xl">
             Ducelis Open is the public reference edition of a structured rehearsal
             product. This shell establishes a minimal, runnable web baseline for a
             text-first practice experience while keeping the direction honest,
             public-safe, and small.
           </p>
-          <Link
-            href="/scenarios"
-            className="inline-flex w-fit items-center rounded-full border border-[var(--accent-strong)] bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_32px_rgba(35,68,127,0.22)] transition duration-150 hover:bg-[var(--accent-strong)]"
-          >
-            Browse public-safe scenarios
-          </Link>
+          <div className="hero-actions">
+            <Link href="/scenarios" className="hero-cta">
+              Browse public-safe scenarios
+            </Link>
+          </div>
         </div>
       </section>
 
