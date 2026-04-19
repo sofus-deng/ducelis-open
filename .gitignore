@@ -55,3 +55,4 @@ artifacts/
 
 # misc
 *.tsbuildinfo
+next-env.d.ts
