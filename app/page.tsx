@@ -47,8 +47,8 @@ export default function Home() {
             text-first practice experience while keeping the direction honest,
             public-safe, and small.
           </p>
-          <div className="hero-actions">
-            <Button asChild>
+          <div className="hero-actions pt-1">
+            <Button asChild size="lg">
               <Link href="/scenarios">Browse public-safe scenarios</Link>
             </Button>
           </div>
@@ -81,14 +81,14 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             <ul className="space-y-4">
-            {statusItems.map((item) => (
-              <li
-                key={item}
-                className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-4 leading-7 text-[var(--foreground)]"
-              >
-                {item}
-              </li>
-            ))}
+              {statusItems.map((item) => (
+                <li
+                  key={item}
+                  className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-4 leading-7 text-[var(--foreground)]"
+                >
+                  {item}
+                </li>
+              ))}
             </ul>
           </CardContent>
         </Card>
@@ -100,19 +100,21 @@ export default function Home() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
-          {principles.map((principle) => (
-            <Card
-              key={principle.title}
-              as="article"
-              tone="muted"
-              className="rounded-2xl p-5"
-            >
-              <CardTitle as="h3" className="text-lg">{principle.title}</CardTitle>
-              <CardDescription className="mt-3 leading-7">
-                {principle.description}
-              </CardDescription>
-            </Card>
-          ))}
+            {principles.map((principle) => (
+              <Card
+                key={principle.title}
+                as="article"
+                tone="muted"
+                className="rounded-2xl p-5"
+              >
+                <CardTitle as="h3" className="text-lg">
+                  {principle.title}
+                </CardTitle>
+                <CardDescription className="mt-3 leading-7">
+                  {principle.description}
+                </CardDescription>
+              </Card>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -123,17 +125,17 @@ export default function Home() {
         </CardHeader>
         <CardContent>
           <ol className="space-y-4">
-          {nextFocus.map((item, index) => (
-            <li
-              key={item}
-              className="flex gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-4"
-            >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-semibold text-white shadow-[0_8px_18px_rgba(47,90,166,0.18)]">
-                {index + 1}
-              </span>
-              <span className="leading-7 text-[var(--foreground)]">{item}</span>
-            </li>
-          ))}
+            {nextFocus.map((item, index) => (
+              <li
+                key={item}
+                className="flex gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-4"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-semibold text-white shadow-[0_8px_18px_rgba(47,90,166,0.18)]">
+                  {index + 1}
+                </span>
+                <span className="leading-7 text-[var(--foreground)]">{item}</span>
+              </li>
+            ))}
           </ol>
         </CardContent>
       </Card>

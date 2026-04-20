@@ -6,6 +6,8 @@
   --secondary-foreground: #5a6980;
   --accent: #2f5aa6;
   --accent-strong: #23447f;
+  --accent-strong-hover: #1d396c;
+  --accent-foreground: #f8fbff;
   --surface: rgba(255, 255, 255, 0.92);
   --surface-strong: rgba(255, 255, 255, 0.98);
   --border: rgba(38, 59, 89, 0.12);
@@ -32,6 +34,7 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
+  --color-accent-foreground: var(--accent-foreground);
   --color-surface: var(--surface);
   --color-surface-strong: var(--surface-strong);
   --color-border: var(--border);

@@ -47,11 +47,15 @@ export default async function ScenarioDetailPage({
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-6 py-10 sm:px-10 lg:px-12">
       <section className="hero-panel hero-panel--compact">
-        <div className="hero-actions">
-          <Button asChild variant="secondary" size="sm">
-            <Link href="/scenarios">Back to scenarios</Link>
-          </Button>
-        </div>
+        <nav aria-label="Scenario detail navigation" className="mb-6">
+          <Link
+            href="/scenarios"
+            className="inline-flex items-center gap-2 text-sm font-medium text-[var(--secondary-foreground)] underline-offset-4 transition-colors duration-150 hover:text-[var(--foreground)] hover:underline"
+          >
+            <span aria-hidden="true">←</span>
+            <span>Back to scenarios</span>
+          </Link>
+        </nav>
         <div className="hero-stack hero-stack--compact">
           <Badge variant="eyebrow">{scenario.difficultyLabel}</Badge>
           <h1 className="hero-title text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
@@ -64,7 +68,7 @@ export default async function ScenarioDetailPage({
       </section>
 
       <section className="mt-8 grid gap-6 md:grid-cols-2">
-        <Card as="article">
+        <Card as="article" className="h-full">
           <CardHeader>
             <CardTitle as="h2">Summary and context</CardTitle>
           </CardHeader>
@@ -73,7 +77,7 @@ export default async function ScenarioDetailPage({
           </CardContent>
         </Card>
 
-        <Card as="article" tone="emphasis">
+        <Card as="article" tone="emphasis" className="h-full">
           <CardHeader>
             <CardTitle as="h2">Focus</CardTitle>
           </CardHeader>
@@ -83,31 +87,31 @@ export default async function ScenarioDetailPage({
         </Card>
       </section>
 
-      <section className="mt-10 grid gap-6 md:grid-cols-2">
-        <Card as="article">
-          <CardHeader>
+      <section className="mt-10 grid gap-6 border-t border-[var(--border)] pt-8 md:grid-cols-2">
+        <Card as="article" className="h-full">
+          <CardHeader className="pb-5">
             <CardTitle as="h2">Success criteria</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-4">
-            {scenario.successCriteria.map((criterion) => (
-              <li
-                key={criterion}
-                className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-4 leading-7 text-[var(--foreground)]"
-              >
-                {criterion}
-              </li>
-            ))}
+              {scenario.successCriteria.map((criterion) => (
+                <li
+                  key={criterion}
+                  className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-4 leading-7 text-[var(--foreground)]"
+                >
+                  {criterion}
+                </li>
+              ))}
             </ul>
           </CardContent>
         </Card>
 
-        <Card as="article">
-          <CardHeader>
+        <Card as="article" className="h-full">
+          <CardHeader className="pb-5">
             <CardTitle as="h2">Current implementation note</CardTitle>
           </CardHeader>
-          <CardContent>
-            <CardDescription>{scenario.statusNote}</CardDescription>
+          <CardContent className="space-y-6">
+            <CardDescription className="leading-7">{scenario.statusNote}</CardDescription>
             <Button type="button" variant="disabled" disabled className="mt-6">
               Rehearsal flow coming next
             </Button>

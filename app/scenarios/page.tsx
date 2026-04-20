@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { scenarios } from "../../content/scenarios";
 
 export default function ScenariosPage() {
@@ -26,36 +26,43 @@ export default function ScenariosPage() {
             key={scenario.id}
             as="article"
             data-testid="scenario-card"
-            className="p-7"
+            className="flex h-full flex-col p-7"
           >
             <div className="flex items-center justify-between gap-4">
-              <Badge variant="accent" className="text-xs font-semibold uppercase tracking-[0.2em] sm:text-sm">
+              <Badge
+                variant="accent"
+                className="text-xs font-semibold uppercase tracking-[0.2em] sm:text-sm"
+              >
                 {scenario.difficultyLabel}
               </Badge>
-              <Badge>
-                3 review points
-              </Badge>
+              <Badge>3 review points</Badge>
             </div>
             <CardHeader className="px-0 pt-5 pb-0">
-              <CardTitle as="h2" className="text-balance">{scenario.title}</CardTitle>
+              <CardTitle as="h2" className="text-balance">
+                {scenario.title}
+              </CardTitle>
             </CardHeader>
-            <CardContent className="px-0 pb-0 pt-4">
+            <CardContent className="flex flex-1 flex-col px-0 pb-0 pt-4">
               <CardDescription className="leading-7">
                 {scenario.shortSummary}
               </CardDescription>
-              <p className="mt-5 text-sm leading-6 text-[var(--foreground)]">
-                <span className="font-semibold">Focus:</span> {scenario.focus}
-              </p>
-              <Card
-                tone="muted"
-                className="mt-4 rounded-2xl px-4 py-4 text-sm leading-6 text-[var(--foreground)]"
-              >
-                {scenario.statusNote}
-              </Card>
-              <Button asChild className="mt-6">
+              <div className="mt-5 space-y-4">
+                <p className="text-sm leading-6 text-[var(--foreground)]">
+                  <span className="font-semibold">Focus:</span> {scenario.focus}
+                </p>
+                <Card
+                  tone="muted"
+                  className="rounded-2xl px-4 py-4 text-sm leading-6 text-[var(--foreground)]"
+                >
+                  {scenario.statusNote}
+                </Card>
+              </div>
+            </CardContent>
+            <CardFooter className="mt-6 px-0 pb-0 pt-0">
+              <Button asChild>
                 <Link href={`/scenarios/${scenario.id}`}>Open scenario</Link>
               </Button>
-            </CardContent>
+            </CardFooter>
           </Card>
         ))}
       </section>
