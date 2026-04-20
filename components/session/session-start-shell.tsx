@@ -21,8 +21,8 @@ export function SessionStartShell({ scenarioTitle }: SessionStartShellProps) {
       return;
     }
 
-    setDraft(normalizedDraft);
     setSubmittedDraft(normalizedDraft);
+    setDraft("");
   }
 
   return (

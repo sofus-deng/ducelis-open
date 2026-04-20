@@ -43,20 +43,13 @@ export default async function SessionPage({ params }: SessionPageProps) {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-10 sm:px-10 lg:px-12">
       <section className="hero-panel hero-panel--compact">
-        <nav aria-label="Session page navigation" className="mb-6 flex flex-wrap items-center gap-3 text-sm font-medium text-[var(--secondary-foreground)]">
-          <Link
-            href="/scenarios"
-            className="inline-flex items-center gap-2 underline-offset-4 transition-colors duration-150 hover:text-[var(--foreground)] hover:underline"
-          >
-            <span aria-hidden="true">←</span>
-            <span>Back to scenarios</span>
-          </Link>
-          <span aria-hidden="true">·</span>
+        <nav aria-label="Session page navigation" className="mb-6">
           <Link
             href={`/scenarios/${scenario.id}`}
-            className="underline-offset-4 transition-colors duration-150 hover:text-[var(--foreground)] hover:underline"
+            className="inline-flex items-center gap-2 text-sm font-medium text-[var(--secondary-foreground)] transition-colors duration-150 hover:text-[var(--foreground)]"
           >
-            Return to scenario detail
+            <span aria-hidden="true">←</span>
+            <span>Back to scenario</span>
           </Link>
         </nav>
         <div className="hero-stack hero-stack--compact" data-testid="session-page-hero">
@@ -71,7 +64,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
         </div>
       </section>
 
-      <section className="mt-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+      <section className="mt-8 grid gap-6 lg:grid-cols-2">
         <Card as="article" className="h-full">
           <CardHeader>
             <CardTitle as="h2">Scenario summary</CardTitle>

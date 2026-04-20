@@ -72,16 +72,20 @@ test("scenario browsing and session-start smoke flow", async ({ page }) => {
     }),
   ).toBeVisible();
   await expect(page).toHaveURL(/\/sessions\/.+/);
+  await page.waitForLoadState("networkidle");
   await expect(page.getByTestId("session-transcript")).toContainText(
     /the session transcript will begin with your opening draft/i,
   );
 
+  await expect(page.getByTestId("session-opening-submit")).toBeDisabled();
   await page.getByTestId("session-opening-draft").fill(
     "I want to walk through the schedule change, explain what shifted, and confirm the next step with you.",
   );
+  await expect(page.getByTestId("session-opening-submit")).toBeEnabled();
   await page.getByTestId("session-opening-submit").click();
 
   await expect(page.getByTestId("session-opening-entry")).toContainText(
     /i want to walk through the schedule change, explain what shifted, and confirm the next step with you\./i,
   );
+  await expect(page.getByTestId("session-opening-draft")).toHaveValue("");
 });
