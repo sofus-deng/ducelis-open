@@ -3,6 +3,8 @@ import { expect, test } from "@playwright/test";
 test("home and scenarios visual regions stay stable", async ({ page }) => {
   await page.goto("/");
 
+  await expect(page.getByTestId("home-primary-cta")).toHaveCSS("color", "rgb(248, 251, 255)");
+
   await expect(page.getByTestId("home-hero")).toHaveScreenshot("home-hero.png", {
     animations: "disabled",
     caret: "hide",
