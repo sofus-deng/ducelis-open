@@ -73,6 +73,10 @@ test("scenario browsing and session-start smoke flow", async ({ page }) => {
   ).toBeVisible();
   await expect(page).toHaveURL(/\/sessions\/.+/);
   await page.waitForLoadState("networkidle");
+  await expect(page.getByTestId("session-page-grid")).toHaveScreenshot("session-page-grid.png", {
+    animations: "disabled",
+    caret: "hide",
+  });
   await expect(page.getByTestId("session-transcript")).toContainText(
     /the session transcript will begin with your opening draft/i,
   );

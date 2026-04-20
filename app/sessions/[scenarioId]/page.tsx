@@ -64,56 +64,59 @@ export default async function SessionPage({ params }: SessionPageProps) {
         </div>
       </section>
 
-      <section className="mt-8 grid gap-6 lg:grid-cols-2">
-        <Card as="article" className="h-full">
-          <CardHeader>
-            <CardTitle as="h2">Scenario summary</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <CardDescription>{scenario.shortSummary}</CardDescription>
-            <p className="leading-8 text-[var(--foreground)]">{scenario.context}</p>
-          </CardContent>
-        </Card>
+      <section className="mt-8 space-y-6" data-testid="session-page-grid">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card as="article" className="h-full">
+            <CardHeader>
+              <CardTitle as="h2">Scenario summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <CardDescription>{scenario.shortSummary}</CardDescription>
+              <p className="leading-8 text-[var(--foreground)]">{scenario.context}</p>
+            </CardContent>
+          </Card>
 
-        <Card as="article" tone="emphasis" className="h-full">
-          <CardHeader>
-            <CardTitle as="h2">Session guidance</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--secondary-foreground)]">
-                Focus
-              </p>
-              <p className="mt-2 leading-8 text-[var(--foreground)]">{scenario.focus}</p>
-            </div>
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-4 text-sm leading-7 text-[var(--secondary-foreground)]">
-              Local-first note: the live counterpart response is not connected yet.
-              Your opening draft stays on this page for this step.
-            </div>
-          </CardContent>
-        </Card>
-      </section>
+          <Card as="article" tone="emphasis" className="h-full">
+            <CardHeader>
+              <CardTitle as="h2">Session guidance</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--secondary-foreground)]">
+                  Focus
+                </p>
+                <p className="mt-2 leading-8 text-[var(--foreground)]">{scenario.focus}</p>
+              </div>
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-4 text-sm leading-7 text-[var(--secondary-foreground)]">
+                Local-first note: the live counterpart response is not connected yet.
+                Your opening draft stays on this page for this step.
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-      <section className="mt-10 grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <Card as="article" className="h-full">
-          <CardHeader className="pb-5">
-            <CardTitle as="h2">Success criteria</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-4">
-              {scenario.successCriteria.map((criterion) => (
-                <li
-                  key={criterion}
-                  className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-4 leading-7 text-[var(--foreground)]"
-                >
-                  {criterion}
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-
-        <SessionStartShell scenarioTitle={scenario.title} />
+        <SessionStartShell
+          scenarioTitle={scenario.title}
+          successCriteria={
+            <Card as="article" className="h-full">
+              <CardHeader className="pb-5">
+                <CardTitle as="h2">Success criteria</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-4">
+                  {scenario.successCriteria.map((criterion) => (
+                    <li
+                      key={criterion}
+                      className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-4 leading-7 text-[var(--foreground)]"
+                    >
+                      {criterion}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          }
+        />
       </section>
     </main>
   );

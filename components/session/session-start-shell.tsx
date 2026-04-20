@@ -1,14 +1,16 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { FormEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 type SessionStartShellProps = {
   scenarioTitle: string;
+  successCriteria: ReactNode;
 };
 
-export function SessionStartShell({ scenarioTitle }: SessionStartShellProps) {
+export function SessionStartShell({ scenarioTitle, successCriteria }: SessionStartShellProps) {
   const [draft, setDraft] = useState("");
   const [submittedDraft, setSubmittedDraft] = useState<string | null>(null);
 
@@ -26,7 +28,7 @@ export function SessionStartShell({ scenarioTitle }: SessionStartShellProps) {
   }
 
   return (
-    <div className="grid gap-6" data-testid="session-start-shell">
+    <div className="space-y-6" data-testid="session-start-shell">
       <Card as="article" className="h-full">
         <CardHeader>
           <CardTitle as="h2">Session transcript</CardTitle>
@@ -63,40 +65,44 @@ export function SessionStartShell({ scenarioTitle }: SessionStartShellProps) {
         </CardContent>
       </Card>
 
-      <Card as="article" tone="emphasis">
-        <CardHeader>
-          <CardTitle as="h2">Opening draft</CardTitle>
-          <CardDescription>
-            Draft the first message you want to deliver in the conversation.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <label htmlFor="opening-draft" className="text-sm font-semibold text-[var(--foreground)]">
-              Opening message
-            </label>
-            <textarea
-              id="opening-draft"
-              name="openingDraft"
-              data-testid="session-opening-draft"
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder="Start with a calm explanation, acknowledgement, or request."
-              className="min-h-40 w-full rounded-3xl border border-[var(--border)] bg-white px-4 py-4 text-base leading-7 text-[var(--foreground)] shadow-[0_12px_30px_rgba(15,23,42,0.06)] outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:rgba(47,90,166,0.18)]"
-            />
-            <p className="text-sm leading-6 text-[var(--secondary-foreground)]">
-              This first step stays local to the page and does not generate a counterpart reply yet.
-            </p>
-            <Button
-              type="submit"
-              data-testid="session-opening-submit"
-              disabled={!draft.trim()}
-            >
-              Add opening draft
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 lg:grid-cols-2">
+        {successCriteria}
+
+        <Card as="article" tone="emphasis" className="h-full">
+          <CardHeader>
+            <CardTitle as="h2">Opening draft</CardTitle>
+            <CardDescription>
+              Draft the first message you want to deliver in the conversation.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <label htmlFor="opening-draft" className="text-sm font-semibold text-[var(--foreground)]">
+                Opening message
+              </label>
+              <textarea
+                id="opening-draft"
+                name="openingDraft"
+                data-testid="session-opening-draft"
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                placeholder="Start with a calm explanation, acknowledgement, or request."
+                className="min-h-40 w-full rounded-3xl border border-[var(--border)] bg-white px-4 py-4 text-base leading-7 text-[var(--foreground)] shadow-[0_12px_30px_rgba(15,23,42,0.06)] outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:rgba(47,90,166,0.18)]"
+              />
+              <p className="text-sm leading-6 text-[var(--secondary-foreground)]">
+                This first step stays local to the page and does not generate a counterpart reply yet.
+              </p>
+              <Button
+                type="submit"
+                data-testid="session-opening-submit"
+                disabled={!draft.trim()}
+              >
+                Add opening draft
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
