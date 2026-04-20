@@ -108,12 +108,12 @@ export default async function ScenarioDetailPage({
 
         <Card as="article" className="h-full">
           <CardHeader className="pb-5">
-            <CardTitle as="h2">Current implementation note</CardTitle>
+            <CardTitle as="h2">Start rehearsal</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <CardDescription className="leading-7">{scenario.statusNote}</CardDescription>
-            <Button type="button" variant="disabled" disabled className="mt-6">
-              Rehearsal flow coming next
+            <Button asChild className="mt-6">
+              <Link href={`/sessions/${scenario.id}`}>Start rehearsal session</Link>
             </Button>
           </CardContent>
         </Card>

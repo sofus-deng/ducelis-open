@@ -14,8 +14,9 @@ export default function ScenariosPage() {
             Public-safe rehearsal scenarios for focused review.
           </h1>
           <p className="hero-copy max-w-2xl text-lg leading-8 sm:text-xl">
-            Start with a small set of neutral fixtures that support browsing and
-            scenario review in the reference edition.
+            Start with a small set of neutral fixtures that support browsing,
+            scenario review, and the first local rehearsal start flow in the
+            reference edition.
           </p>
         </div>
       </section>

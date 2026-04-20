@@ -26,7 +26,7 @@ export const scenarios: ScenarioFixture[] = [
     ],
     difficultyLabel: "Foundational",
     statusNote:
-      "Fixture only. This reference build supports browsing and review, not live rehearsal.",
+      "Starts a local-first rehearsal session with an opening draft only. Live counterpart turns are not connected yet.",
   },
   {
     id: "reset-expectations-on-shared-work",
@@ -44,7 +44,7 @@ export const scenarios: ScenarioFixture[] = [
     ],
     difficultyLabel: "Moderate",
     statusNote:
-      "Fixture only. Rehearsal actions remain intentionally disabled in this step.",
+      "Starts a local-first rehearsal session with an opening draft only. Live counterpart turns are not connected yet.",
   },
 ];
 

@@ -28,7 +28,7 @@ test("home and scenarios visual regions stay stable", async ({ page }) => {
   });
 });
 
-test("scenario browsing smoke flow", async ({ page }) => {
+test("scenario browsing and session-start smoke flow", async ({ page }) => {
   await page.goto("/");
 
   await expect(page).toHaveTitle(/Ducelis Open/i);
@@ -62,7 +62,26 @@ test("scenario browsing smoke flow", async ({ page }) => {
       name: /success criteria/i,
     }),
   ).toBeVisible();
+
+  await page.getByRole("link", { name: /start rehearsal session/i }).click();
+
   await expect(
-    page.getByRole("button", { name: /rehearsal flow coming next/i }),
-  ).toBeDisabled();
+    page.getByRole("heading", {
+      level: 1,
+      name: /rehearsal session for review a schedule change with a direct report/i,
+    }),
+  ).toBeVisible();
+  await expect(page).toHaveURL(/\/sessions\/.+/);
+  await expect(page.getByTestId("session-transcript")).toContainText(
+    /the session transcript will begin with your opening draft/i,
+  );
+
+  await page.getByTestId("session-opening-draft").fill(
+    "I want to walk through the schedule change, explain what shifted, and confirm the next step with you.",
+  );
+  await page.getByTestId("session-opening-submit").click();
+
+  await expect(page.getByTestId("session-opening-entry")).toContainText(
+    /i want to walk through the schedule change, explain what shifted, and confirm the next step with you\./i,
+  );
 });
