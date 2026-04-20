@@ -41,9 +41,9 @@ export default async function SessionPage({ params }: SessionPageProps) {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-10 sm:px-10 lg:px-12">
-      <section className="hero-panel hero-panel--compact">
-        <nav aria-label="Session page navigation" className="mb-6">
+    <main className="session-app-shell">
+      <header className="session-app-shell__header">
+        <nav aria-label="Session page navigation">
           <Link
             href={`/scenarios/${scenario.id}`}
             className="inline-flex items-center gap-2 text-sm font-medium text-[var(--secondary-foreground)] transition-colors duration-150 hover:text-[var(--foreground)]"
@@ -52,40 +52,44 @@ export default async function SessionPage({ params }: SessionPageProps) {
             <span>Back to scenario</span>
           </Link>
         </nav>
-        <div className="hero-stack hero-stack--compact" data-testid="session-page-hero">
-          <Badge variant="eyebrow">Session start</Badge>
-          <h1 className="hero-title text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+        <div className="session-app-shell__heading" data-testid="session-page-hero">
+          <Badge variant="accent" className="session-app-shell__label">
+            Session start
+          </Badge>
+          <h1 className="text-3xl font-semibold tracking-tight text-balance text-[var(--foreground)] sm:text-4xl">
             Rehearsal session for {scenario.title}
           </h1>
-          <p className="hero-copy max-w-3xl text-lg leading-8 sm:text-xl">
-            The session is ready for a first opening turn. Start with a calm draft,
-            review the scenario context, and shape the beginning of the rehearsal locally.
-          </p>
         </div>
-      </section>
+      </header>
 
-      <section className="mt-8 space-y-6" data-testid="session-page-grid">
-        <div className="grid gap-6 lg:grid-cols-2">
+      <SessionStartShell
+        scenarioTitle={scenario.title}
+        sidebar={
+          <>
           <Card as="article" className="h-full">
-            <CardHeader>
-              <CardTitle as="h2">Scenario summary</CardTitle>
+            <CardHeader className="pb-5">
+              <CardTitle as="h2" className="text-xl">
+                Scenario summary
+              </CardTitle>
+              <CardDescription>{scenario.shortSummary}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <CardDescription>{scenario.shortSummary}</CardDescription>
-              <p className="leading-8 text-[var(--foreground)]">{scenario.context}</p>
+              <p className="leading-7 text-[var(--foreground)]">{scenario.context}</p>
             </CardContent>
           </Card>
 
           <Card as="article" tone="emphasis" className="h-full">
-            <CardHeader>
-              <CardTitle as="h2">Session guidance</CardTitle>
+            <CardHeader className="pb-5">
+              <CardTitle as="h2" className="text-xl">
+                Session guidance
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--secondary-foreground)]">
                   Focus
                 </p>
-                <p className="mt-2 leading-8 text-[var(--foreground)]">{scenario.focus}</p>
+                <p className="mt-2 leading-7 text-[var(--foreground)]">{scenario.focus}</p>
               </div>
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-4 text-sm leading-7 text-[var(--secondary-foreground)]">
                 Local-first note: the live counterpart response is not connected yet.
@@ -93,14 +97,12 @@ export default async function SessionPage({ params }: SessionPageProps) {
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        <SessionStartShell
-          scenarioTitle={scenario.title}
-          successCriteria={
             <Card as="article" className="h-full">
               <CardHeader className="pb-5">
-                <CardTitle as="h2">Success criteria</CardTitle>
+                <CardTitle as="h2" className="text-xl">
+                  Success criteria
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-4">
@@ -115,9 +117,9 @@ export default async function SessionPage({ params }: SessionPageProps) {
                 </ul>
               </CardContent>
             </Card>
-          }
-        />
-      </section>
+          </>
+        }
+      />
     </main>
   );
 }

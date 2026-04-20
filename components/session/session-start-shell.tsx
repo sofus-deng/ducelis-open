@@ -7,10 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 type SessionStartShellProps = {
   scenarioTitle: string;
-  successCriteria: ReactNode;
+  sidebar: ReactNode;
 };
 
-export function SessionStartShell({ scenarioTitle, successCriteria }: SessionStartShellProps) {
+export function SessionStartShell({ scenarioTitle, sidebar }: SessionStartShellProps) {
   const [draft, setDraft] = useState("");
   const [submittedDraft, setSubmittedDraft] = useState<string | null>(null);
 
@@ -28,45 +28,47 @@ export function SessionStartShell({ scenarioTitle, successCriteria }: SessionSta
   }
 
   return (
-    <div className="space-y-6" data-testid="session-start-shell">
-      <Card as="article" className="h-full">
-        <CardHeader>
-          <CardTitle as="h2">Session transcript</CardTitle>
-          <CardDescription>
-            The session begins with your opening draft for {scenarioTitle}.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div
-            data-testid="session-transcript"
-            className="min-h-56 rounded-3xl border border-[var(--border)] bg-[var(--surface-strong)] p-5"
-          >
-            {submittedDraft ? (
-              <article
-                data-testid="session-opening-entry"
-                className="rounded-2xl border border-[color:rgba(35,68,127,0.14)] bg-white px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)]"
-              >
-                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--secondary-foreground)]">
-                  You
-                </p>
-                <p className="mt-3 whitespace-pre-wrap leading-7 text-[var(--foreground)]">
-                  {submittedDraft}
-                </p>
-              </article>
-            ) : (
-              <div className="flex min-h-44 items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-white/70 px-6 py-8 text-center">
-                <p className="max-w-md leading-7 text-[var(--secondary-foreground)]">
-                  The session transcript will begin with your opening draft.
-                  Add the first turn when you are ready to start the rehearsal.
-                </p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+    <section className="session-app-shell__workspace" data-testid="session-page-grid">
+      <aside className="session-app-shell__sidebar" aria-label="Session context" data-testid="session-context-sidebar">
+        {sidebar}
+      </aside>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {successCriteria}
+      <div className="session-app-shell__main" data-testid="session-start-shell">
+        <Card as="article" className="flex min-h-[26rem] flex-1 flex-col">
+          <CardHeader className="pb-5">
+            <CardTitle as="h2">Session transcript</CardTitle>
+            <CardDescription>
+              The session begins with your opening draft for {scenarioTitle}.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-1 flex-col">
+            <div
+              data-testid="session-transcript"
+              className="flex min-h-72 flex-1 flex-col rounded-3xl border border-[var(--border)] bg-[var(--surface-strong)] p-5 sm:p-6"
+            >
+              {submittedDraft ? (
+                <article
+                  data-testid="session-opening-entry"
+                  className="max-w-3xl rounded-2xl border border-[color:rgba(35,68,127,0.14)] bg-white px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)]"
+                >
+                  <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--secondary-foreground)]">
+                    You
+                  </p>
+                  <p className="mt-3 whitespace-pre-wrap leading-7 text-[var(--foreground)]">
+                    {submittedDraft}
+                  </p>
+                </article>
+              ) : (
+                <div className="flex min-h-full flex-1 items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-white/70 px-6 py-8 text-center">
+                  <p className="max-w-md leading-7 text-[var(--secondary-foreground)]">
+                    The session transcript will begin with your opening draft.
+                    Add the first turn when you are ready to start the rehearsal.
+                  </p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         <Card as="article" tone="emphasis" className="h-full">
           <CardHeader>
@@ -103,6 +105,6 @@ export function SessionStartShell({ scenarioTitle, successCriteria }: SessionSta
           </CardContent>
         </Card>
       </div>
-    </div>
+    </section>
   );
 }
