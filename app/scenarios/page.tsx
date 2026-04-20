@@ -7,7 +7,7 @@ import { scenarios } from "../../content/scenarios";
 export default function ScenariosPage() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-10 sm:px-10 lg:px-12">
-      <section className="hero-panel">
+      <section className="hero-panel" data-testid="scenarios-hero">
         <div className="hero-stack">
           <Badge variant="eyebrow">Scenario library</Badge>
           <h1 className="hero-title text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
@@ -26,23 +26,23 @@ export default function ScenariosPage() {
             key={scenario.id}
             as="article"
             data-testid="scenario-card"
-            className="flex h-full flex-col p-7"
+            className="flex h-full flex-col"
           >
-            <div className="flex items-center justify-between gap-4">
-              <Badge
-                variant="accent"
-                className="text-xs font-semibold uppercase tracking-[0.2em] sm:text-sm"
-              >
-                {scenario.difficultyLabel}
-              </Badge>
-              <Badge>3 review points</Badge>
-            </div>
-            <CardHeader className="px-0 pt-5 pb-0">
+            <CardHeader className="gap-5 pb-0">
+              <div className="flex items-center justify-between gap-4">
+                <Badge
+                  variant="accent"
+                  className="text-xs font-semibold uppercase tracking-[0.2em] sm:text-sm"
+                >
+                  {scenario.difficultyLabel}
+                </Badge>
+                <Badge>3 review points</Badge>
+              </div>
               <CardTitle as="h2" className="text-balance">
                 {scenario.title}
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-1 flex-col px-0 pb-0 pt-4">
+            <CardContent className="flex flex-1 flex-col pt-4">
               <CardDescription className="leading-7">
                 {scenario.shortSummary}
               </CardDescription>
@@ -58,7 +58,7 @@ export default function ScenariosPage() {
                 </Card>
               </div>
             </CardContent>
-            <CardFooter className="mt-6 px-0 pb-0 pt-0">
+            <CardFooter className="mt-auto pt-6">
               <Button asChild>
                 <Link href={`/scenarios/${scenario.id}`}>Open scenario</Link>
               </Button>

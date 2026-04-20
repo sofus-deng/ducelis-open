@@ -35,7 +35,7 @@ const nextFocus = [
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-6 py-10 sm:px-10 lg:px-12">
-      <section className="hero-panel">
+      <section className="hero-panel" data-testid="home-hero">
         <div className="hero-stack">
           <p className="hero-eyebrow">Ducelis Open</p>
           <h1 className="hero-title text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
@@ -49,7 +49,9 @@ export default function Home() {
           </p>
           <div className="hero-actions pt-1">
             <Button asChild size="lg">
-              <Link href="/scenarios">Browse public-safe scenarios</Link>
+              <Link data-testid="home-primary-cta" href="/scenarios">
+                Browse public-safe scenarios
+              </Link>
             </Button>
           </div>
         </div>

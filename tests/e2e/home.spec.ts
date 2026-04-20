@@ -1,5 +1,31 @@
 import { expect, test } from "@playwright/test";
 
+test("home and scenarios visual regions stay stable", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByTestId("home-hero")).toHaveScreenshot("home-hero.png", {
+    animations: "disabled",
+    caret: "hide",
+  });
+
+  await expect(page.getByTestId("home-primary-cta")).toHaveScreenshot("home-primary-cta.png", {
+    animations: "disabled",
+    caret: "hide",
+  });
+
+  await page.goto("/scenarios");
+
+  await expect(page.getByTestId("scenarios-hero")).toHaveScreenshot("scenarios-hero.png", {
+    animations: "disabled",
+    caret: "hide",
+  });
+
+  await expect(page.getByTestId("scenario-card").first()).toHaveScreenshot("scenarios-first-card.png", {
+    animations: "disabled",
+    caret: "hide",
+  });
+});
+
 test("scenario browsing smoke flow", async ({ page }) => {
   await page.goto("/");
 
