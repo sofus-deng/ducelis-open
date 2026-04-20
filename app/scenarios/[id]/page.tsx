@@ -63,7 +63,7 @@ export default async function ScenarioDetailPage({
         </div>
       </section>
 
-      <section className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+      <section className="mt-8 grid gap-6 md:grid-cols-2">
         <Card as="article">
           <CardHeader>
             <CardTitle as="h2">Summary and context</CardTitle>
@@ -83,7 +83,7 @@ export default async function ScenarioDetailPage({
         </Card>
       </section>
 
-      <section className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+      <section className="mt-10 grid gap-6 md:grid-cols-2">
         <Card as="article">
           <CardHeader>
             <CardTitle as="h2">Success criteria</CardTitle>
