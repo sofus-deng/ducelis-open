@@ -8,7 +8,7 @@ export type LocalModelConfig = {
 
 const DEFAULT_OLLAMA_MODEL = "gemma4:e4b";
 const DEFAULT_OLLAMA_BASE_URL = "http://127.0.0.1:11434";
-const DEFAULT_OLLAMA_TIMEOUT_MS = 20_000;
+const DEFAULT_OLLAMA_TIMEOUT_MS = 60_000;
 
 function readEnvString(name: string, fallback: string) {
   const value = process.env[name]?.trim();

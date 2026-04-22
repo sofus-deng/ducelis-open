@@ -16,11 +16,28 @@ type OllamaGenerateResponse = {
 
 type LocalRuntimeErrorCode =
   | "runtime_unavailable"
+  | "runtime_timeout"
   | "model_unavailable"
   | "invalid_runtime_response";
 
+export type LocalRuntimeDiagnostics = {
+  model: string;
+  baseUrl: string;
+  timeoutMs: number;
+  failureCategory:
+    | "timeout"
+    | "network_error"
+    | "http_error"
+    | "model_unavailable"
+    | "invalid_runtime_response";
+  runtimeStatus?: number;
+};
+
 const RUNTIME_UNAVAILABLE_MESSAGE =
-  "The local runtime is unavailable. Confirm Ollama is running locally and that the configured model is available, then try again.";
+  "The local runtime is unavailable. Confirm Ollama is running locally, verify OLLAMA_BASE_URL, and try again.";
+
+const RUNTIME_TIMEOUT_MESSAGE =
+  "The local runtime did not respond before the configured timeout. Confirm Ollama is running locally, then retry or increase OLLAMA_TIMEOUT_MS and try again.";
 
 const MODEL_UNAVAILABLE_MESSAGE =
   "The configured local model is not available in Ollama. Update OLLAMA_MODEL or install the model locally, then try again.";
@@ -33,6 +50,7 @@ export class LocalRuntimeError extends Error {
     public readonly code: LocalRuntimeErrorCode,
     public readonly userMessage: string,
     public readonly status: number,
+    public readonly diagnostics: LocalRuntimeDiagnostics,
   ) {
     super(userMessage);
     this.name = "LocalRuntimeError";
@@ -60,7 +78,36 @@ function buildFirstCounterpartPrompt({
 }
 
 function readRuntimeErrorMessage(payload: OllamaGenerateResponse | null) {
-  return typeof payload?.error === "string" ? payload.error.toLowerCase() : "";
+  return typeof payload?.error === "string" ? payload.error.trim() : "";
+}
+
+function buildDiagnostics(
+  config: ReturnType<typeof getLocalModelConfig>,
+  failureCategory: LocalRuntimeDiagnostics["failureCategory"],
+  runtimeStatus?: number,
+): LocalRuntimeDiagnostics {
+  return {
+    model: config.model,
+    baseUrl: config.baseUrl,
+    timeoutMs: config.timeoutMs,
+    failureCategory,
+    runtimeStatus,
+  };
+}
+
+function getErrorCauseMessage(error: Error) {
+  const cause = (error as Error & { cause?: unknown }).cause;
+
+  if (
+    cause &&
+    typeof cause === "object" &&
+    "message" in cause &&
+    typeof cause.message === "string"
+  ) {
+    return cause.message;
+  }
+
+  return error.message;
 }
 
 export async function generateFirstCounterpartReply(input: GenerateFirstCounterpartReplyInput) {
@@ -87,13 +134,27 @@ export async function generateFirstCounterpartReply(input: GenerateFirstCounterp
 
     const payload = (await response.json().catch(() => null)) as OllamaGenerateResponse | null;
     const runtimeErrorMessage = readRuntimeErrorMessage(payload);
+    const normalizedRuntimeErrorMessage = runtimeErrorMessage.toLowerCase();
 
     if (!response.ok) {
-      if (runtimeErrorMessage.includes("not found") || runtimeErrorMessage.includes("pull")) {
-        throw new LocalRuntimeError("model_unavailable", MODEL_UNAVAILABLE_MESSAGE, 503);
+      if (
+        normalizedRuntimeErrorMessage.includes("not found") ||
+        normalizedRuntimeErrorMessage.includes("pull")
+      ) {
+        throw new LocalRuntimeError(
+          "model_unavailable",
+          MODEL_UNAVAILABLE_MESSAGE,
+          503,
+          buildDiagnostics(config, "model_unavailable", response.status),
+        );
       }
 
-      throw new LocalRuntimeError("runtime_unavailable", RUNTIME_UNAVAILABLE_MESSAGE, 503);
+      throw new LocalRuntimeError(
+        "runtime_unavailable",
+        RUNTIME_UNAVAILABLE_MESSAGE,
+        503,
+        buildDiagnostics(config, "http_error", response.status),
+      );
     }
 
     const reply = typeof payload?.response === "string" ? payload.response.trim() : "";
@@ -103,6 +164,7 @@ export async function generateFirstCounterpartReply(input: GenerateFirstCounterp
         "invalid_runtime_response",
         INVALID_RUNTIME_RESPONSE_MESSAGE,
         502,
+        buildDiagnostics(config, "invalid_runtime_response", response.status),
       );
     }
 
@@ -116,10 +178,33 @@ export async function generateFirstCounterpartReply(input: GenerateFirstCounterp
     }
 
     if (error instanceof Error && error.name === "AbortError") {
-      throw new LocalRuntimeError("runtime_unavailable", RUNTIME_UNAVAILABLE_MESSAGE, 503);
+      throw new LocalRuntimeError(
+        "runtime_timeout",
+        RUNTIME_TIMEOUT_MESSAGE,
+        504,
+        buildDiagnostics(config, "timeout"),
+      );
     }
 
-    throw new LocalRuntimeError("runtime_unavailable", RUNTIME_UNAVAILABLE_MESSAGE, 503);
+    if (error instanceof Error) {
+      const causeMessage = getErrorCauseMessage(error).toLowerCase();
+
+      if (causeMessage.includes("timed out")) {
+        throw new LocalRuntimeError(
+          "runtime_timeout",
+          RUNTIME_TIMEOUT_MESSAGE,
+          504,
+          buildDiagnostics(config, "timeout"),
+        );
+      }
+    }
+
+    throw new LocalRuntimeError(
+      "runtime_unavailable",
+      RUNTIME_UNAVAILABLE_MESSAGE,
+      503,
+      buildDiagnostics(config, "network_error"),
+    );
   } finally {
     clearTimeout(timeoutId);
   }

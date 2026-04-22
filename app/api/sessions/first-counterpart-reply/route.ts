@@ -7,6 +7,8 @@ import {
 
 export const runtime = "nodejs";
 
+const SHOULD_INCLUDE_RUNTIME_DIAGNOSTICS = process.env.NODE_ENV !== "production";
+
 type SessionReplyRequest = {
   scenarioId?: unknown;
   openingDraft?: unknown;
@@ -61,16 +63,25 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     if (error instanceof LocalRuntimeError) {
+      console.error("Local runtime request failed", {
+        code: error.code,
+        status: error.status,
+        diagnostics: error.diagnostics,
+      });
+
       return NextResponse.json(
         {
           error: {
             code: error.code,
             message: error.userMessage,
+            ...(SHOULD_INCLUDE_RUNTIME_DIAGNOSTICS ? { diagnostics: error.diagnostics } : {}),
           },
         },
         { status: error.status },
       );
     }
+
+    console.error("Unexpected local runtime request failure", error);
 
     return NextResponse.json(
       {

@@ -122,13 +122,19 @@ test("session start shows a calm local runtime error when the local reply fails"
 
   await page.route("**/api/sessions/first-counterpart-reply", async (route) => {
     await route.fulfill({
-      status: 503,
+      status: 504,
       contentType: "application/json",
       body: JSON.stringify({
         error: {
-          code: "runtime_unavailable",
+          code: "runtime_timeout",
           message:
-            "The local runtime is unavailable. Confirm Ollama is running locally and that the configured model is available, then try again.",
+            "The local runtime did not respond before the configured timeout. Confirm Ollama is running locally, then retry or increase OLLAMA_TIMEOUT_MS and try again.",
+          diagnostics: {
+            model: "gemma4:e4b",
+            baseUrl: "http://127.0.0.1:11434",
+            timeoutMs: 60000,
+            failureCategory: "timeout",
+          },
         },
       }),
     });
@@ -143,8 +149,11 @@ test("session start shows a calm local runtime error when the local reply fails"
     /i want to explain the schedule change clearly and make sure we agree on the next step\./i,
   );
   await expect(page.getByTestId("session-runtime-error")).toContainText(
-    /the local runtime is unavailable\. confirm ollama is running locally and that the configured model is available, then try again\./i,
+    /the local runtime did not respond before the configured timeout\. confirm ollama is running locally, then retry or increase ollama_timeout_ms and try again\./i,
   );
+  await expect(page.getByTestId("session-runtime-error")).not.toContainText(/technical details/i);
+  await expect(page.getByTestId("session-runtime-error")).not.toContainText(/gemma4:e4b/i);
+  await expect(page.getByTestId("session-runtime-error")).not.toContainText(/http:\/\/127\.0\.0\.1:11434/i);
   await expect(page.getByTestId("session-counterpart-entry")).toHaveCount(0);
   await expect(page.getByTestId("session-opening-submit")).toBeEnabled();
   await expect(page.getByTestId("session-opening-draft")).toHaveValue(

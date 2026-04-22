@@ -16,9 +16,20 @@ type SessionReplySuccess = {
   model?: string;
 };
 
+const SHOW_DEVELOPMENT_RUNTIME_DIAGNOSTICS = process.env.NODE_ENV === "development";
+
+type SessionRuntimeDiagnostics = {
+  model?: string;
+  baseUrl?: string;
+  timeoutMs?: number;
+  failureCategory?: string;
+  runtimeStatus?: number;
+};
+
 type SessionReplyFailure = {
   error?: {
     message?: string;
+    diagnostics?: SessionRuntimeDiagnostics;
   };
 };
 
@@ -28,6 +39,14 @@ function getRuntimeErrorMessage(payload: SessionReplySuccess | SessionReplyFailu
   }
 
   return payload.error?.message?.trim() || null;
+}
+
+function getRuntimeDiagnostics(payload: SessionReplySuccess | SessionReplyFailure | null) {
+  if (!payload || !("error" in payload)) {
+    return null;
+  }
+
+  return payload.error?.diagnostics ?? null;
 }
 
 function getCounterpartReply(payload: SessionReplySuccess | SessionReplyFailure | null) {
@@ -41,11 +60,24 @@ function getCounterpartReply(payload: SessionReplySuccess | SessionReplyFailure 
 const FALLBACK_RUNTIME_ERROR =
   "The local runtime could not produce a counterpart reply. Confirm Ollama is available locally and try again.";
 
+function formatTimeout(timeoutMs: number | undefined) {
+  if (typeof timeoutMs !== "number" || !Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    return null;
+  }
+
+  if (timeoutMs % 1000 === 0) {
+    return `${timeoutMs / 1000} seconds`;
+  }
+
+  return `${timeoutMs} ms`;
+}
+
 export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: SessionStartShellProps) {
   const [draft, setDraft] = useState("");
   const [submittedDraft, setSubmittedDraft] = useState<string | null>(null);
   const [counterpartReply, setCounterpartReply] = useState<string | null>(null);
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
+  const [runtimeDiagnostics, setRuntimeDiagnostics] = useState<SessionRuntimeDiagnostics | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -59,6 +91,7 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
 
     setCounterpartReply(null);
     setRuntimeError(null);
+    setRuntimeDiagnostics(null);
     setSubmittedDraft(normalizedDraft);
     setIsSubmitting(true);
 
@@ -81,6 +114,7 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
 
       if (!response.ok) {
         setRuntimeError(getRuntimeErrorMessage(payload) || FALLBACK_RUNTIME_ERROR);
+        setRuntimeDiagnostics(getRuntimeDiagnostics(payload));
         return;
       }
 
@@ -88,6 +122,7 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
 
       if (!nextReply) {
         setRuntimeError(FALLBACK_RUNTIME_ERROR);
+        setRuntimeDiagnostics(null);
         return;
       }
 
@@ -169,6 +204,38 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
                       className="max-w-3xl rounded-2xl border border-[color:rgba(180,106,60,0.28)] bg-[color:rgba(255,247,240,0.92)] px-4 py-4 text-sm leading-7 text-[color:rgba(109,61,25,0.96)]"
                     >
                       {runtimeError}
+
+                      {SHOW_DEVELOPMENT_RUNTIME_DIAGNOSTICS && runtimeDiagnostics ? (
+                        <div className="mt-4 rounded-2xl border border-[color:rgba(180,106,60,0.18)] bg-white/50 px-3 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:rgba(109,61,25,0.88)]">
+                            Technical details (development only)
+                          </p>
+
+                          <dl className="mt-2 grid gap-2 text-xs leading-6 text-[color:rgba(109,61,25,0.92)] sm:grid-cols-2">
+                          <div>
+                            <dt className="font-semibold uppercase tracking-[0.12em]">Model</dt>
+                            <dd>{runtimeDiagnostics.model || "Unknown"}</dd>
+                          </div>
+                          <div>
+                            <dt className="font-semibold uppercase tracking-[0.12em]">Base URL</dt>
+                            <dd className="break-all">{runtimeDiagnostics.baseUrl || "Unknown"}</dd>
+                          </div>
+                          <div>
+                            <dt className="font-semibold uppercase tracking-[0.12em]">Timeout</dt>
+                            <dd>{formatTimeout(runtimeDiagnostics.timeoutMs) || "Unknown"}</dd>
+                          </div>
+                          <div>
+                            <dt className="font-semibold uppercase tracking-[0.12em]">Failure</dt>
+                            <dd>
+                              {runtimeDiagnostics.failureCategory || "unknown"}
+                              {typeof runtimeDiagnostics.runtimeStatus === "number"
+                                ? ` (HTTP ${runtimeDiagnostics.runtimeStatus})`
+                                : ""}
+                            </dd>
+                          </div>
+                          </dl>
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>
