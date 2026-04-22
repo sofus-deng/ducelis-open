@@ -27,8 +27,8 @@ export async function generateMetadata({ params }: SessionPageProps): Promise<Me
   }
 
   return {
-    title: `Session start: ${scenario.title} | Ducelis Open`,
-    description: `Begin a local-first rehearsal session for ${scenario.title}.`,
+    title: `${scenario.title} | Ducelis Open`,
+    description: `Start a local-first rehearsal for ${scenario.title}.`,
   };
 }
 
@@ -52,12 +52,12 @@ export default async function SessionPage({ params }: SessionPageProps) {
             <span>Back to scenario</span>
           </Link>
         </nav>
-        <div className="session-app-shell__heading" data-testid="session-page-hero">
+        <div className="session-app-shell__heading gap-3" data-testid="session-page-hero">
           <Badge variant="accent" className="session-app-shell__label">
             Session start
           </Badge>
-          <h1 className="text-3xl font-semibold tracking-tight text-balance text-[var(--foreground)] sm:text-4xl">
-            Rehearsal session for {scenario.title}
+          <h1 className="text-2xl font-semibold tracking-tight text-balance text-[var(--foreground)] sm:text-3xl">
+            {scenario.title}
           </h1>
         </div>
       </header>
@@ -93,9 +93,8 @@ export default async function SessionPage({ params }: SessionPageProps) {
                 <p className="mt-2 leading-7 text-[var(--foreground)]">{scenario.focus}</p>
               </div>
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-4 text-sm leading-7 text-[var(--secondary-foreground)]">
-                Local-first note: this session requests one first counterpart reply through the
-                configured local runtime on the server. If the runtime is unavailable, the session
-                stays on the page and shows a calm error state.
+                Local-first note: this session generates one first counterpart reply through the
+                configured local runtime and keeps any runtime issue in a calm on-page state.
               </div>
             </CardContent>
           </Card>

@@ -6,7 +6,7 @@ export type LocalModelConfig = {
   timeoutMs: number;
 };
 
-const DEFAULT_OLLAMA_MODEL = "gemma4:e4b";
+const DEFAULT_OLLAMA_MODEL = "gemma4:e2b";
 const DEFAULT_OLLAMA_BASE_URL = "http://127.0.0.1:11434";
 const DEFAULT_OLLAMA_TIMEOUT_MS = 60_000;
 

@@ -68,7 +68,7 @@ test("scenario browsing and session-start smoke flow", async ({ page }) => {
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: /rehearsal session for review a schedule change with a direct report/i,
+      name: /review a schedule change with a direct report/i,
     }),
   ).toBeVisible();
   await expect(page).toHaveURL(/\/sessions\/.+/);
@@ -78,7 +78,7 @@ test("scenario browsing and session-start smoke flow", async ({ page }) => {
     caret: "hide",
   });
   await expect(page.getByTestId("session-transcript")).toContainText(
-    /the session transcript will begin with your opening draft/i,
+    /add your opening message to start the rehearsal\. your transcript and the first counterpart reply will appear here\./i,
   );
 
   await expect(page.getByTestId("session-opening-submit")).toBeDisabled();
@@ -91,13 +91,15 @@ test("scenario browsing and session-start smoke flow", async ({ page }) => {
         "I want to walk through the schedule change, explain what shifted, and confirm the next step with you.",
     });
 
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
     await route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
         counterpartReply:
           "Thanks for walking me through it. Can you clarify who is covering the upcoming work block now?",
-        model: "gemma4:e4b",
+        model: "gemma4:e2b",
       }),
     });
   });
@@ -108,6 +110,10 @@ test("scenario browsing and session-start smoke flow", async ({ page }) => {
   await expect(page.getByTestId("session-opening-submit")).toBeEnabled();
   await page.getByTestId("session-opening-submit").click();
 
+  await expect(page.getByTestId("session-counterpart-pending")).toContainText(
+    /waiting for the first counterpart reply from the local runtime\./i,
+  );
+
   await expect(page.getByTestId("session-opening-entry")).toContainText(
     /i want to walk through the schedule change, explain what shifted, and confirm the next step with you\./i,
   );
@@ -115,6 +121,7 @@ test("scenario browsing and session-start smoke flow", async ({ page }) => {
     /thanks for walking me through it\. can you clarify who is covering the upcoming work block now\?/i,
   );
   await expect(page.getByTestId("session-opening-draft")).toHaveValue("");
+  await expect(page.getByTestId("session-opening-draft")).toBeFocused();
 });
 
 test("session start shows a calm local runtime error when the local reply fails", async ({ page }) => {
@@ -130,7 +137,7 @@ test("session start shows a calm local runtime error when the local reply fails"
           message:
             "The local runtime did not respond before the configured timeout. Confirm Ollama is running locally, then retry or increase OLLAMA_TIMEOUT_MS and try again.",
           diagnostics: {
-            model: "gemma4:e4b",
+            model: "gemma4:e2b",
             baseUrl: "http://127.0.0.1:11434",
             timeoutMs: 60000,
             failureCategory: "timeout",
@@ -151,8 +158,9 @@ test("session start shows a calm local runtime error when the local reply fails"
   await expect(page.getByTestId("session-runtime-error")).toContainText(
     /the local runtime did not respond before the configured timeout\. confirm ollama is running locally, then retry or increase ollama_timeout_ms and try again\./i,
   );
+  await expect(page.getByTestId("session-runtime-error")).toContainText(/runtime status/i);
   await expect(page.getByTestId("session-runtime-error")).not.toContainText(/technical details/i);
-  await expect(page.getByTestId("session-runtime-error")).not.toContainText(/gemma4:e4b/i);
+  await expect(page.getByTestId("session-runtime-error")).not.toContainText(/gemma4:e2b/i);
   await expect(page.getByTestId("session-runtime-error")).not.toContainText(/http:\/\/127\.0\.0\.1:11434/i);
   await expect(page.getByTestId("session-counterpart-entry")).toHaveCount(0);
   await expect(page.getByTestId("session-opening-submit")).toBeEnabled();
