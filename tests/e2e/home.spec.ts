@@ -28,7 +28,7 @@ test("home and scenarios visual regions stay stable", async ({ page }) => {
   });
 });
 
-test("scenario browsing and session-start smoke flow", async ({ page }) => {
+test("scenario browsing and session rehearsal support a second exchange", async ({ page }) => {
   await page.goto("/");
 
   await expect(page).toHaveTitle(/Ducelis Open/i);
@@ -73,23 +73,45 @@ test("scenario browsing and session-start smoke flow", async ({ page }) => {
   ).toBeVisible();
   await expect(page).toHaveURL(/\/sessions\/.+/);
   await page.waitForLoadState("networkidle");
+  await expect(page.getByTestId("session-start-shell")).toHaveAttribute("data-hydrated", "true");
   await expect(page.getByTestId("session-page-grid")).toHaveScreenshot("session-page-grid.png", {
     animations: "disabled",
     caret: "hide",
   });
   await expect(page.getByTestId("session-transcript")).toContainText(
-    /add your opening message to start the rehearsal\. your transcript and the first counterpart reply will appear here\./i,
+    /add your first turn to start the rehearsal\. the transcript stays here as the conversation continues\./i,
   );
 
-  await expect(page.getByTestId("session-opening-submit")).toBeDisabled();
+  await expect(page.getByTestId("session-turn-submit")).toBeDisabled();
 
-  await page.route("**/api/sessions/first-counterpart-reply", async (route) => {
-    expect(route.request().method()).toBe("POST");
-    expect(route.request().postDataJSON()).toMatchObject({
+  const firstUserTurn =
+    "I want to walk through the schedule change, explain what shifted, and confirm the next step with you.";
+  const firstCounterpartReply =
+    "Thanks for walking me through it. Can you clarify who is covering the upcoming work block now?";
+  const secondUserTurn =
+    "Jordan is covering that block, and I want to make sure the handoff feels clear and fair to you.";
+  const secondCounterpartReply =
+    "I appreciate the clarification. What should I tell the rest of the team if they ask why the schedule moved?";
+  const expectedRequests = [
+    {
       scenarioId: "schedule-change-direct-report",
-      openingDraft:
-        "I want to walk through the schedule change, explain what shifted, and confirm the next step with you.",
-    });
+      transcript: [{ role: "user", content: firstUserTurn }],
+    },
+    {
+      scenarioId: "schedule-change-direct-report",
+      transcript: [
+        { role: "user", content: firstUserTurn },
+        { role: "counterpart", content: firstCounterpartReply },
+        { role: "user", content: secondUserTurn },
+      ],
+    },
+  ];
+  const replies = [firstCounterpartReply, secondCounterpartReply];
+  let requestIndex = 0;
+
+  await page.route("**/api/sessions/counterpart-reply", async (route) => {
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().postDataJSON()).toEqual(expectedRequests[requestIndex]);
 
     await new Promise((resolve) => setTimeout(resolve, 150));
 
@@ -97,37 +119,96 @@ test("scenario browsing and session-start smoke flow", async ({ page }) => {
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
-        counterpartReply:
-          "Thanks for walking me through it. Can you clarify who is covering the upcoming work block now?",
+        counterpartReply: replies[requestIndex],
         model: "gemma4:e2b",
       }),
     });
+
+    requestIndex += 1;
   });
 
-  await page.getByTestId("session-opening-draft").fill(
-    "I want to walk through the schedule change, explain what shifted, and confirm the next step with you.",
-  );
-  await expect(page.getByTestId("session-opening-submit")).toBeEnabled();
-  await page.getByTestId("session-opening-submit").click();
+  await expect(page.getByTestId("session-turn-draft")).toBeEditable();
+  await page.getByTestId("session-turn-draft").click();
+  await page.getByTestId("session-turn-draft").pressSequentially(firstUserTurn);
+  await expect(page.getByTestId("session-turn-submit")).toBeEnabled();
+  await page.getByTestId("session-turn-submit").click();
 
   await expect(page.getByTestId("session-counterpart-pending")).toContainText(
-    /waiting for the first counterpart reply from the local runtime\./i,
+    /waiting for the next counterpart reply from the local runtime\./i,
   );
 
-  await expect(page.getByTestId("session-opening-entry")).toContainText(
+  await expect(page.getByTestId("session-user-entry").first()).toContainText(
     /i want to walk through the schedule change, explain what shifted, and confirm the next step with you\./i,
   );
-  await expect(page.getByTestId("session-counterpart-entry")).toContainText(
+  await expect(page.getByTestId("session-counterpart-entry").first()).toContainText(
     /thanks for walking me through it\. can you clarify who is covering the upcoming work block now\?/i,
   );
-  await expect(page.getByTestId("session-opening-draft")).toHaveValue("");
-  await expect(page.getByTestId("session-opening-draft")).toBeFocused();
+  await expect(page.getByTestId("session-turn-draft")).toHaveValue("");
+  await expect(page.getByTestId("session-turn-draft")).toBeFocused();
+
+  await page.getByTestId("session-turn-draft").click();
+  await page.getByTestId("session-turn-draft").pressSequentially(secondUserTurn);
+  await expect(page.getByTestId("session-turn-submit")).toBeEnabled();
+  await page.getByTestId("session-turn-submit").click();
+
+  await expect(page.getByTestId("session-counterpart-pending")).toContainText(
+    /waiting for the next counterpart reply from the local runtime\./i,
+  );
+
+  await expect(page.getByTestId("session-user-entry")).toHaveCount(2);
+  await expect(page.getByTestId("session-counterpart-entry")).toHaveCount(2);
+  await expect(page.getByTestId("session-user-entry").nth(1)).toContainText(
+    /jordan is covering that block, and i want to make sure the handoff feels clear and fair to you\./i,
+  );
+  await expect(page.getByTestId("session-counterpart-entry").nth(1)).toContainText(
+    /i appreciate the clarification\. what should i tell the rest of the team if they ask why the schedule moved\?/i,
+  );
+  await expect(page.getByTestId("session-turn-draft")).toHaveValue("");
+  await expect(page.getByTestId("session-turn-draft")).toBeFocused();
 });
 
-test("session start shows a calm local runtime error when the local reply fails", async ({ page }) => {
+test("session rehearsal preserves prior turns when a later local reply fails", async ({ page }) => {
   await page.goto("/sessions/schedule-change-direct-report");
+  await expect(page.getByTestId("session-start-shell")).toHaveAttribute("data-hydrated", "true");
 
-  await page.route("**/api/sessions/first-counterpart-reply", async (route) => {
+  const firstUserTurn =
+    "I want to explain the schedule change clearly and make sure we agree on the next step.";
+  const firstCounterpartReply =
+    "Thanks for being direct about it. What changed in the plan from the original schedule?";
+  const secondUserTurn =
+    "The original schedule no longer works, and I want to explain the updated coverage without leaving gaps.";
+  const expectedRequests = [
+    {
+      scenarioId: "schedule-change-direct-report",
+      transcript: [{ role: "user", content: firstUserTurn }],
+    },
+    {
+      scenarioId: "schedule-change-direct-report",
+      transcript: [
+        { role: "user", content: firstUserTurn },
+        { role: "counterpart", content: firstCounterpartReply },
+        { role: "user", content: secondUserTurn },
+      ],
+    },
+  ];
+  let requestIndex = 0;
+
+  await page.route("**/api/sessions/counterpart-reply", async (route) => {
+    expect(route.request().postDataJSON()).toEqual(expectedRequests[requestIndex]);
+
+    if (requestIndex === 0) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          counterpartReply: firstCounterpartReply,
+          model: "gemma4:e2b",
+        }),
+      });
+      requestIndex += 1;
+      return;
+    }
+
     await route.fulfill({
       status: 504,
       contentType: "application/json",
@@ -145,15 +226,31 @@ test("session start shows a calm local runtime error when the local reply fails"
         },
       }),
     });
+
+    requestIndex += 1;
   });
 
-  await page.getByTestId("session-opening-draft").fill(
-    "I want to explain the schedule change clearly and make sure we agree on the next step.",
-  );
-  await page.getByTestId("session-opening-submit").click();
+  await expect(page.getByTestId("session-turn-draft")).toBeEditable();
+  await page.getByTestId("session-turn-draft").click();
+  await page.getByTestId("session-turn-draft").pressSequentially(firstUserTurn);
+  await expect(page.getByTestId("session-turn-submit")).toBeEnabled();
+  await page.getByTestId("session-turn-submit").click();
 
-  await expect(page.getByTestId("session-opening-entry")).toContainText(
+  await expect(page.getByTestId("session-user-entry").first()).toContainText(
     /i want to explain the schedule change clearly and make sure we agree on the next step\./i,
+  );
+  await expect(page.getByTestId("session-counterpart-entry").first()).toContainText(
+    /thanks for being direct about it\. what changed in the plan from the original schedule\?/i,
+  );
+
+  await page.getByTestId("session-turn-draft").click();
+  await page.getByTestId("session-turn-draft").pressSequentially(secondUserTurn);
+  await page.getByTestId("session-turn-submit").click();
+
+  await expect(page.getByTestId("session-user-entry")).toHaveCount(2);
+  await expect(page.getByTestId("session-counterpart-entry")).toHaveCount(1);
+  await expect(page.getByTestId("session-user-entry").nth(1)).toContainText(
+    /the original schedule no longer works, and i want to explain the updated coverage without leaving gaps\./i,
   );
   await expect(page.getByTestId("session-runtime-error")).toContainText(
     /the local runtime did not respond before the configured timeout\. confirm ollama is running locally, then retry or increase ollama_timeout_ms and try again\./i,
@@ -162,9 +259,6 @@ test("session start shows a calm local runtime error when the local reply fails"
   await expect(page.getByTestId("session-runtime-error")).not.toContainText(/technical details/i);
   await expect(page.getByTestId("session-runtime-error")).not.toContainText(/gemma4:e2b/i);
   await expect(page.getByTestId("session-runtime-error")).not.toContainText(/http:\/\/127\.0\.0\.1:11434/i);
-  await expect(page.getByTestId("session-counterpart-entry")).toHaveCount(0);
-  await expect(page.getByTestId("session-opening-submit")).toBeEnabled();
-  await expect(page.getByTestId("session-opening-draft")).toHaveValue(
-    "I want to explain the schedule change clearly and make sure we agree on the next step.",
-  );
+  await expect(page.getByTestId("session-turn-submit")).toBeEnabled();
+  await expect(page.getByTestId("session-turn-draft")).toHaveValue(secondUserTurn);
 });

@@ -2,11 +2,16 @@ import "server-only";
 
 import { getLocalModelConfig } from "@/lib/runtime/local-model-config";
 
-type GenerateFirstCounterpartReplyInput = {
+type GenerateCounterpartReplyInput = {
   scenarioTitle: string;
   scenarioSummary: string;
   scenarioFocus: string;
-  openingDraft: string;
+  transcript: SessionTranscriptTurn[];
+};
+
+type SessionTranscriptTurn = {
+  role: "user" | "counterpart";
+  content: string;
 };
 
 type OllamaGenerateResponse = {
@@ -44,6 +49,7 @@ const MODEL_UNAVAILABLE_MESSAGE =
 
 const INVALID_RUNTIME_RESPONSE_MESSAGE =
   "The local runtime responded, but it did not return a usable counterpart reply.";
+const MAX_PROMPT_TRANSCRIPT_TURNS = 4;
 
 export class LocalRuntimeError extends Error {
   constructor(
@@ -57,22 +63,27 @@ export class LocalRuntimeError extends Error {
   }
 }
 
-function buildFirstCounterpartPrompt({
+function buildCounterpartPrompt({
   scenarioTitle,
   scenarioSummary,
   scenarioFocus,
-  openingDraft,
-}: GenerateFirstCounterpartReplyInput) {
+  transcript,
+}: GenerateCounterpartReplyInput) {
+  const recentTranscript = transcript.slice(-MAX_PROMPT_TRANSCRIPT_TURNS);
+
   return [
     "You are the counterpart in a rehearsal conversation.",
-    "Write exactly one concise reply in plain text.",
-    "Keep the tone believable, calm, and grounded in the scenario.",
+    "Write exactly one concise reply in plain text to the latest user turn.",
+    "Keep the tone believable, calm, public-safe, and grounded in the scenario.",
     "Do not mention being an AI, a model, or a rehearsal system.",
-    "Do not add analysis, lists, labels, or multiple options.",
+    "Do not add analysis, lists, labels, stage directions, or multiple options.",
     `Scenario title: ${scenarioTitle}`,
     `Scenario summary: ${scenarioSummary}`,
     `Focus: ${scenarioFocus}`,
-    `Opening draft: ${openingDraft}`,
+    "Recent transcript:",
+    ...recentTranscript.map((turn) =>
+      `${turn.role === "user" ? "User" : "Counterpart"}: ${turn.content}`,
+    ),
     "Counterpart reply:",
   ].join("\n");
 }
@@ -110,7 +121,7 @@ function getErrorCauseMessage(error: Error) {
   return error.message;
 }
 
-export async function generateFirstCounterpartReply(input: GenerateFirstCounterpartReplyInput) {
+export async function generateCounterpartReply(input: GenerateCounterpartReplyInput) {
   const config = getLocalModelConfig();
   const abortController = new AbortController();
   const timeoutId = setTimeout(() => abortController.abort(), config.timeoutMs);
@@ -123,7 +134,7 @@ export async function generateFirstCounterpartReply(input: GenerateFirstCounterp
       },
       body: JSON.stringify({
         model: config.model,
-        prompt: buildFirstCounterpartPrompt(input),
+        prompt: buildCounterpartPrompt(input),
         stream: false,
         options: {
           temperature: 0.2,

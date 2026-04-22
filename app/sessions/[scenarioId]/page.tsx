@@ -54,7 +54,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
         </nav>
         <div className="session-app-shell__heading gap-3" data-testid="session-page-hero">
           <Badge variant="accent" className="session-app-shell__label">
-            Session start
+            Rehearsal session
           </Badge>
           <h1 className="text-2xl font-semibold tracking-tight text-balance text-[var(--foreground)] sm:text-3xl">
             {scenario.title}
@@ -93,7 +93,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
                 <p className="mt-2 leading-7 text-[var(--foreground)]">{scenario.focus}</p>
               </div>
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-4 text-sm leading-7 text-[var(--secondary-foreground)]">
-                Local-first note: this session generates one first counterpart reply through the
+                Local-first note: each submitted turn generates one counterpart reply through the
                 configured local runtime and keeps any runtime issue in a calm on-page state.
               </div>
             </CardContent>

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getScenarioById } from "@/content/scenarios";
 import {
   LocalRuntimeError,
-  generateFirstCounterpartReply,
+  generateCounterpartReply,
 } from "@/lib/runtime/local-model-adapter";
 
 export const runtime = "nodejs";
@@ -11,24 +11,57 @@ const SHOULD_INCLUDE_RUNTIME_DIAGNOSTICS = process.env.NODE_ENV !== "production"
 
 type SessionReplyRequest = {
   scenarioId?: unknown;
-  openingDraft?: unknown;
+  transcript?: unknown;
+};
+
+type SessionReplyTurn = {
+  role: "user" | "counterpart";
+  content: string;
 };
 
 function readTrimmedString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function readTranscript(value: unknown): SessionReplyTurn[] | null {
+  if (!Array.isArray(value) || value.length === 0) {
+    return null;
+  }
+
+  const transcript: SessionReplyTurn[] = [];
+
+  for (const entry of value) {
+    if (!entry || typeof entry !== "object") {
+      return null;
+    }
+
+    const role = readTrimmedString((entry as { role?: unknown }).role);
+    const content = readTrimmedString((entry as { content?: unknown }).content);
+
+    if (!content || (role !== "user" && role !== "counterpart")) {
+      return null;
+    }
+
+    transcript.push({
+      role,
+      content,
+    });
+  }
+
+  return transcript;
+}
+
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as SessionReplyRequest | null;
   const scenarioId = readTrimmedString(body?.scenarioId);
-  const openingDraft = readTrimmedString(body?.openingDraft);
+  const transcript = readTranscript(body?.transcript);
 
-  if (!scenarioId || !openingDraft) {
+  if (!scenarioId || !transcript || transcript[transcript.length - 1]?.role !== "user") {
     return NextResponse.json(
       {
         error: {
           code: "invalid_request",
-          message: "Provide a scenario id and a non-empty opening draft.",
+          message: "Provide a scenario id and a non-empty transcript that ends with a user turn.",
         },
       },
       { status: 400 },
@@ -50,11 +83,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await generateFirstCounterpartReply({
+    const result = await generateCounterpartReply({
       scenarioTitle: scenario.title,
       scenarioSummary: scenario.shortSummary,
       scenarioFocus: scenario.focus,
-      openingDraft,
+      transcript,
     });
 
     return NextResponse.json({

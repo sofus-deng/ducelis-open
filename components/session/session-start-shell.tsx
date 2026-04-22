@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -16,7 +16,19 @@ type SessionReplySuccess = {
   model?: string;
 };
 
+type SessionTurnRole = "user" | "counterpart";
+
+type SessionTurnInput = {
+  role: SessionTurnRole;
+  content: string;
+};
+
+type SessionTurn = SessionTurnInput & {
+  id: string;
+};
+
 const SHOW_DEVELOPMENT_RUNTIME_DIAGNOSTICS = process.env.NODE_ENV === "development";
+const MAX_RUNTIME_CONTEXT_TURNS = 4;
 
 type SessionRuntimeDiagnostics = {
   model?: string;
@@ -72,22 +84,49 @@ function formatTimeout(timeoutMs: number | undefined) {
   return `${timeoutMs} ms`;
 }
 
+function getTurnLabel(role: SessionTurnRole) {
+  return role === "user" ? "You" : "Counterpart";
+}
+
+function toRequestTurn(turn: SessionTurn): SessionTurnInput {
+  return {
+    role: turn.role,
+    content: turn.content,
+  };
+}
+
 export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: SessionStartShellProps) {
   const [draft, setDraft] = useState("");
-  const [submittedDraft, setSubmittedDraft] = useState<string | null>(null);
-  const [counterpartReply, setCounterpartReply] = useState<string | null>(null);
+  const [turns, setTurns] = useState<SessionTurn[]>([]);
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
   const [runtimeDiagnostics, setRuntimeDiagnostics] = useState<SessionRuntimeDiagnostics | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isHydrated = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
+  const turnIdRef = useRef(0);
+
+  function createTurn(input: SessionTurnInput): SessionTurn {
+    turnIdRef.current += 1;
+
+    return {
+      id: `session-turn-${turnIdRef.current}`,
+      ...input,
+    };
+  }
 
   useEffect(() => {
-    if (!counterpartReply) {
+    const latestTurn = turns[turns.length - 1];
+
+    if (!isHydrated || isSubmitting || latestTurn?.role !== "counterpart") {
       return;
     }
 
     composerRef.current?.focus();
-  }, [counterpartReply]);
+  }, [isHydrated, isSubmitting, turns]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -98,21 +137,29 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
       return;
     }
 
-    setCounterpartReply(null);
+    const nextUserTurn = createTurn({
+      role: "user",
+      content: normalizedDraft,
+    });
+
+    const transcript = [...turns.map(toRequestTurn), toRequestTurn(nextUserTurn)].slice(
+      -MAX_RUNTIME_CONTEXT_TURNS,
+    );
+
     setRuntimeError(null);
     setRuntimeDiagnostics(null);
-    setSubmittedDraft(normalizedDraft);
+    setTurns((currentTurns) => [...currentTurns, nextUserTurn]);
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/sessions/first-counterpart-reply", {
+      const response = await fetch("/api/sessions/counterpart-reply", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           scenarioId,
-          openingDraft: normalizedDraft,
+          transcript,
         }),
       });
 
@@ -135,7 +182,13 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
         return;
       }
 
-      setCounterpartReply(nextReply);
+      setTurns((currentTurns) => [
+        ...currentTurns,
+        createTurn({
+          role: "counterpart",
+          content: nextReply,
+        }),
+      ]);
       setDraft("");
     } catch {
       setRuntimeError(FALLBACK_RUNTIME_ERROR);
@@ -150,13 +203,17 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
         {sidebar}
       </aside>
 
-      <div className="session-app-shell__main" data-testid="session-start-shell">
+      <div
+        className="session-app-shell__main"
+        data-testid="session-start-shell"
+        data-hydrated={isHydrated ? "true" : "false"}
+      >
         <Card as="article" className="flex min-h-[30rem] flex-1 flex-col">
           <CardHeader className="pb-5">
             <CardTitle as="h2">Transcript</CardTitle>
             <CardDescription>
-              Start with your opening message for {scenarioTitle}. The first counterpart reply will
-              appear here.
+              Keep the rehearsal centered here for {scenarioTitle}. Each submitted turn can add one
+              counterpart reply.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-1 flex-col">
@@ -164,19 +221,26 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
               data-testid="session-transcript"
               className="flex min-h-80 flex-1 flex-col rounded-3xl border border-[color:rgba(35,68,127,0.14)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,250,255,0.96))] p-5 shadow-[0_18px_48px_rgba(15,23,42,0.05)] sm:p-6"
             >
-              {submittedDraft ? (
+              {turns.length ? (
                 <div className="flex flex-1 flex-col gap-4 sm:gap-5">
-                  <article
-                    data-testid="session-opening-entry"
-                    className="max-w-3xl self-end rounded-[1.5rem] border border-[color:rgba(35,68,127,0.16)] bg-white px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] sm:px-5"
-                  >
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--secondary-foreground)]">
-                      You
-                    </p>
-                    <p className="mt-3 whitespace-pre-wrap leading-7 text-[var(--foreground)]">
-                      {submittedDraft}
-                    </p>
-                  </article>
+                  {turns.map((turn) => (
+                    <article
+                      key={turn.id}
+                      data-testid={turn.role === "user" ? "session-user-entry" : "session-counterpart-entry"}
+                      className={
+                        turn.role === "user"
+                          ? "max-w-3xl self-end rounded-[1.5rem] border border-[color:rgba(35,68,127,0.16)] bg-white px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] sm:px-5"
+                          : "max-w-3xl rounded-[1.5rem] border border-[color:rgba(47,90,166,0.18)] bg-[color:rgba(248,251,255,0.95)] px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] sm:px-5"
+                      }
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--secondary-foreground)]">
+                        {getTurnLabel(turn.role)}
+                      </p>
+                      <p className="mt-3 whitespace-pre-wrap leading-7 text-[var(--foreground)]">
+                        {turn.content}
+                      </p>
+                    </article>
+                  ))}
 
                   {isSubmitting ? (
                     <div
@@ -194,7 +258,7 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
                           className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--accent)] animate-pulse"
                         />
                         <p className="leading-7 text-[var(--secondary-foreground)]">
-                          Waiting for the first counterpart reply from the local runtime.
+                          Waiting for the next counterpart reply from the local runtime.
                         </p>
                       </div>
                     </div>
@@ -245,29 +309,15 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
                       ) : null}
                     </div>
                   ) : null}
-
-                  {counterpartReply ? (
-                    <article
-                      data-testid="session-counterpart-entry"
-                      className="max-w-3xl rounded-[1.5rem] border border-[color:rgba(47,90,166,0.18)] bg-[color:rgba(248,251,255,0.95)] px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] sm:px-5"
-                    >
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--secondary-foreground)]">
-                        Counterpart
-                      </p>
-                      <p className="mt-3 whitespace-pre-wrap leading-7 text-[var(--foreground)]">
-                        {counterpartReply}
-                      </p>
-                    </article>
-                  ) : null}
                 </div>
               ) : (
                 <div className="flex min-h-full flex-1 flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-[color:rgba(35,68,127,0.18)] bg-white/70 px-6 py-10 text-center">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--secondary-foreground)]">
-                    First turn
+                    Rehearsal loop
                   </p>
                   <p className="mt-3 max-w-xl text-base leading-7 text-[var(--secondary-foreground)]">
-                    Add your opening message to start the rehearsal. Your transcript and the first
-                    counterpart reply will appear here.
+                    Add your first turn to start the rehearsal. The transcript stays here as the
+                    conversation continues.
                   </p>
                 </div>
               )}
@@ -277,38 +327,38 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
 
         <Card as="article" tone="emphasis" className="h-full border-[var(--border)] bg-[rgba(255,255,255,0.84)]">
           <CardHeader>
-            <CardTitle as="h2">Opening message</CardTitle>
+            <CardTitle as="h2">Next turn</CardTitle>
             <CardDescription>
-              Keep this brief and direct. The composer stays available while the transcript remains
-              the main work area.
+              Keep each turn brief and direct. The composer stays secondary while the transcript
+              remains the main work area.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form className="space-y-4" onSubmit={handleSubmit}>
-              <label htmlFor="opening-draft" className="text-sm font-semibold text-[var(--foreground)]">
-                Your first turn
+              <label htmlFor="turn-draft" className="text-sm font-semibold text-[var(--foreground)]">
+                Your message
               </label>
               <textarea
                 ref={composerRef}
-                id="opening-draft"
-                name="openingDraft"
-                data-testid="session-opening-draft"
+                id="turn-draft"
+                name="turnDraft"
+                data-testid="session-turn-draft"
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
-                placeholder="Start with a clear explanation, acknowledgement, or request."
+                placeholder="Continue with a clear explanation, acknowledgement, question, or request."
                 disabled={isSubmitting}
                 className="min-h-40 w-full rounded-3xl border border-[var(--border)] bg-white px-4 py-4 text-base leading-7 text-[var(--foreground)] shadow-[0_12px_30px_rgba(15,23,42,0.06)] outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:rgba(47,90,166,0.18)]"
               />
               <p className="text-sm leading-6 text-[var(--secondary-foreground)]">
-                This sends one opening message through the server-side local runtime boundary and
-                returns one counterpart reply.
+                Each submit sends your latest turn with a small recent transcript through the
+                server-side local runtime boundary and returns one counterpart reply.
               </p>
               <Button
                 type="submit"
-                data-testid="session-opening-submit"
+                data-testid="session-turn-submit"
                 disabled={!draft.trim() || isSubmitting}
               >
-                {isSubmitting ? "Working…" : "Generate counterpart reply"}
+                {isSubmitting ? "Working…" : "Send turn"}
               </Button>
             </form>
           </CardContent>
