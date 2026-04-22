@@ -26,7 +26,7 @@ export const scenarios: ScenarioFixture[] = [
     ],
     difficultyLabel: "Foundational",
     statusNote:
-      "Starts a local-first rehearsal session with an opening draft only. Live counterpart turns are not connected yet.",
+      "Starts a local-first rehearsal session with an opening draft and one first local counterpart reply.",
   },
   {
     id: "reset-expectations-on-shared-work",
@@ -44,7 +44,7 @@ export const scenarios: ScenarioFixture[] = [
     ],
     difficultyLabel: "Moderate",
     statusNote:
-      "Starts a local-first rehearsal session with an opening draft only. Live counterpart turns are not connected yet.",
+      "Starts a local-first rehearsal session with an opening draft and one first local counterpart reply.",
   },
 ];
 

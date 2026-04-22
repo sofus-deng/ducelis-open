@@ -63,6 +63,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
       </header>
 
       <SessionStartShell
+        scenarioId={scenario.id}
         scenarioTitle={scenario.title}
         sidebar={
           <>
@@ -92,8 +93,9 @@ export default async function SessionPage({ params }: SessionPageProps) {
                 <p className="mt-2 leading-7 text-[var(--foreground)]">{scenario.focus}</p>
               </div>
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-4 text-sm leading-7 text-[var(--secondary-foreground)]">
-                Local-first note: the live counterpart response is not connected yet.
-                Your opening draft stays on this page for this step.
+                Local-first note: this session requests one first counterpart reply through the
+                configured local runtime on the server. If the runtime is unavailable, the session
+                stays on the page and shows a calm error state.
               </div>
             </CardContent>
           </Card>

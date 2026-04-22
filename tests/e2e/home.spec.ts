@@ -82,6 +82,26 @@ test("scenario browsing and session-start smoke flow", async ({ page }) => {
   );
 
   await expect(page.getByTestId("session-opening-submit")).toBeDisabled();
+
+  await page.route("**/api/sessions/first-counterpart-reply", async (route) => {
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().postDataJSON()).toMatchObject({
+      scenarioId: "schedule-change-direct-report",
+      openingDraft:
+        "I want to walk through the schedule change, explain what shifted, and confirm the next step with you.",
+    });
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        counterpartReply:
+          "Thanks for walking me through it. Can you clarify who is covering the upcoming work block now?",
+        model: "gemma4:e4b",
+      }),
+    });
+  });
+
   await page.getByTestId("session-opening-draft").fill(
     "I want to walk through the schedule change, explain what shifted, and confirm the next step with you.",
   );
@@ -91,5 +111,43 @@ test("scenario browsing and session-start smoke flow", async ({ page }) => {
   await expect(page.getByTestId("session-opening-entry")).toContainText(
     /i want to walk through the schedule change, explain what shifted, and confirm the next step with you\./i,
   );
+  await expect(page.getByTestId("session-counterpart-entry")).toContainText(
+    /thanks for walking me through it\. can you clarify who is covering the upcoming work block now\?/i,
+  );
   await expect(page.getByTestId("session-opening-draft")).toHaveValue("");
+});
+
+test("session start shows a calm local runtime error when the local reply fails", async ({ page }) => {
+  await page.goto("/sessions/schedule-change-direct-report");
+
+  await page.route("**/api/sessions/first-counterpart-reply", async (route) => {
+    await route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({
+        error: {
+          code: "runtime_unavailable",
+          message:
+            "The local runtime is unavailable. Confirm Ollama is running locally and that the configured model is available, then try again.",
+        },
+      }),
+    });
+  });
+
+  await page.getByTestId("session-opening-draft").fill(
+    "I want to explain the schedule change clearly and make sure we agree on the next step.",
+  );
+  await page.getByTestId("session-opening-submit").click();
+
+  await expect(page.getByTestId("session-opening-entry")).toContainText(
+    /i want to explain the schedule change clearly and make sure we agree on the next step\./i,
+  );
+  await expect(page.getByTestId("session-runtime-error")).toContainText(
+    /the local runtime is unavailable\. confirm ollama is running locally and that the configured model is available, then try again\./i,
+  );
+  await expect(page.getByTestId("session-counterpart-entry")).toHaveCount(0);
+  await expect(page.getByTestId("session-opening-submit")).toBeEnabled();
+  await expect(page.getByTestId("session-opening-draft")).toHaveValue(
+    "I want to explain the schedule change clearly and make sure we agree on the next step.",
+  );
 });
