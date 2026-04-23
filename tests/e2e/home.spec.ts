@@ -167,6 +167,136 @@ test("scenario browsing and session rehearsal support a second exchange", async 
   await expect(page.getByTestId("session-turn-draft")).toBeFocused();
 });
 
+test("session transcript keeps the newest turn visible when desktop overflow occurs", async ({ page }) => {
+  await page.goto("/sessions/schedule-change-direct-report");
+  await page.waitForLoadState("networkidle");
+  await expect(page.getByTestId("session-start-shell")).toHaveAttribute("data-hydrated", "true");
+
+  const userTurns = [
+    "I want to walk through the updated schedule, explain the shift clearly, and confirm what support you need first.",
+    "The main change is coverage on Friday afternoon, and I want to make sure the handoff does not feel abrupt.",
+    "Jordan is covering the first block, and I will stay available if anything in the transition feels unclear.",
+    "I also want to name that this is a plan adjustment, not a signal that your work is being deprioritized.",
+    "If the team asks, I want us aligned on the simple explanation before the next standup starts.",
+    "Before we wrap, I want to hear whether any part of the shift still feels confusing or unfair from your side.",
+  ];
+  const counterpartReplies = [
+    "Thanks for starting with the context. What changed between the original plan and the revised Friday coverage?",
+    "That helps. Who should I go to first if something slips during the handoff window?",
+    "I appreciate you naming that. What should I tell the rest of the team about why the schedule moved?",
+    "That makes sense. Is there anything you want me to flag early if the revised plan starts to wobble?",
+    "I can work with that. How do you want me to respond if someone assumes this was a performance issue?",
+    "I mostly understand it now. Can we summarize the immediate next step before the meeting ends?",
+  ];
+  let requestIndex = 0;
+
+  await page.route("**/api/sessions/counterpart-reply", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 120));
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        counterpartReply: counterpartReplies[requestIndex],
+        model: "gemma4:e2b",
+      }),
+    });
+
+    requestIndex += 1;
+  });
+
+  for (const [index, userTurn] of userTurns.entries()) {
+    await page.getByTestId("session-turn-draft").click();
+    await page.getByTestId("session-turn-draft").fill(userTurn);
+    await page.getByTestId("session-turn-submit").click();
+
+    await expect(page.getByTestId("session-counterpart-entry").last()).toContainText(
+      counterpartReplies[index],
+    );
+  }
+
+  await expect(page.getByTestId("session-user-entry")).toHaveCount(userTurns.length);
+  await expect(page.getByTestId("session-counterpart-entry")).toHaveCount(counterpartReplies.length);
+  await expect(page.getByTestId("session-counterpart-entry").last()).toBeInViewport();
+  await expect(page.getByTestId("session-turn-submit")).toBeInViewport();
+
+  const transcriptMetrics = await page.getByTestId("session-transcript").evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+    scrollTop: element.scrollTop,
+    overflowY: window.getComputedStyle(element).overflowY,
+  }));
+
+  expect(transcriptMetrics.overflowY).toBe("auto");
+  expect(transcriptMetrics.scrollHeight).toBeGreaterThan(transcriptMetrics.clientHeight);
+  expect(
+    transcriptMetrics.scrollHeight -
+      (transcriptMetrics.scrollTop + transcriptMetrics.clientHeight),
+  ).toBeLessThanOrEqual(24);
+});
+
+test("session transcript keeps mobile scrolling at the page level after multiple turns", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/sessions/schedule-change-direct-report");
+  await page.waitForLoadState("networkidle");
+  await expect(page.getByTestId("session-start-shell")).toHaveAttribute("data-hydrated", "true");
+
+  const userTurns = [
+    "I want to explain the schedule adjustment clearly and make sure the first question is easy to ask.",
+    "The Friday handoff changed, and I want to make sure you know who is covering what before the day starts.",
+    "If anything feels off in the transition, I want you to flag it early instead of trying to absorb it alone.",
+    "Before we close, I want to confirm the one sentence you can use if teammates ask why the plan moved.",
+  ];
+  const counterpartReplies = [
+    "Thanks for explaining it directly. What changed in the original Friday plan?",
+    "That helps. Who is the first person I should check with if the handoff gets messy?",
+    "Understood. What should I say if someone assumes the change reflects a performance problem?",
+    "That works for me. Can we restate the next step before the conversation ends?",
+  ];
+  let requestIndex = 0;
+
+  await page.route("**/api/sessions/counterpart-reply", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        counterpartReply: counterpartReplies[requestIndex],
+        model: "gemma4:e2b",
+      }),
+    });
+
+    requestIndex += 1;
+  });
+
+  for (const [index, userTurn] of userTurns.entries()) {
+    await page.getByTestId("session-turn-draft").click();
+    await page.getByTestId("session-turn-draft").fill(userTurn);
+    await page.getByTestId("session-turn-submit").click();
+
+    await expect(page.getByTestId("session-counterpart-entry").last()).toContainText(
+      counterpartReplies[index],
+    );
+  }
+
+  const transcriptMetrics = await page.getByTestId("session-transcript").evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+    overflowY: window.getComputedStyle(element).overflowY,
+  }));
+  const pageMetrics = await page.evaluate(() => ({
+    innerHeight: window.innerHeight,
+    scrollHeight: document.documentElement.scrollHeight,
+  }));
+
+  expect(transcriptMetrics.overflowY).toBe("visible");
+  expect(transcriptMetrics.scrollHeight).toBe(transcriptMetrics.clientHeight);
+  expect(pageMetrics.scrollHeight).toBeGreaterThan(pageMetrics.innerHeight);
+
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await expect(page.getByTestId("session-counterpart-entry").last()).toBeInViewport();
+  await expect(page.getByTestId("session-turn-submit")).toBeInViewport();
+});
+
 test("session rehearsal preserves prior turns when a later local reply fails", async ({ page }) => {
   await page.goto("/sessions/schedule-change-direct-report");
   await expect(page.getByTestId("session-start-shell")).toHaveAttribute("data-hydrated", "true");

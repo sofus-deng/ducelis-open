@@ -67,7 +67,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
         scenarioTitle={scenario.title}
         sidebar={
           <>
-          <Card as="article" className="h-full">
+          <Card as="article" className="session-app-shell__sidebar-card">
             <CardHeader className="pb-5">
               <CardTitle as="h2" className="text-xl">
                 Scenario summary
@@ -79,7 +79,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
             </CardContent>
           </Card>
 
-          <Card as="article" tone="emphasis" className="h-full">
+          <Card as="article" tone="emphasis" className="session-app-shell__sidebar-card">
             <CardHeader className="pb-5">
               <CardTitle as="h2" className="text-xl">
                 Session guidance
@@ -99,7 +99,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
             </CardContent>
           </Card>
 
-            <Card as="article" className="h-full">
+            <Card as="article" className="session-app-shell__sidebar-card">
               <CardHeader className="pb-5">
                 <CardTitle as="h2" className="text-xl">
                   Success criteria

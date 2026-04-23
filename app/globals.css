@@ -249,6 +249,24 @@ a {
   gap: 1rem;
 }
 
+.session-app-shell__sidebar {
+  align-content: start;
+}
+
+.session-app-shell__sidebar-card {
+  height: auto;
+}
+
+.session-chat-workspace {
+  min-height: 0;
+}
+
+.session-chat-workspace__frame,
+.session-chat-workspace__transcript {
+  min-height: 0;
+  min-width: 0;
+}
+
 @media (min-width: 640px) {
   .hero-panel {
     border-radius: 1.75rem;
@@ -295,7 +313,18 @@ a {
     align-items: stretch;
   }
 
+  .session-app-shell__sidebar {
+    align-self: start;
+  }
+
   .session-app-shell__main {
     min-height: calc(100vh - 10rem);
+    height: calc(100vh - 10rem);
+    max-height: calc(100vh - 10rem);
+  }
+
+  .session-chat-workspace__transcript {
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
   }
 }
