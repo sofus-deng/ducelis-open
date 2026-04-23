@@ -28,7 +28,7 @@ test("home and scenarios visual regions stay stable", async ({ page }) => {
   });
 });
 
-test("scenario browsing and session rehearsal support a second exchange", async ({ page }) => {
+test("scenario browsing and session rehearsal keep counterpart replies grounded across turns", async ({ page }) => {
   await page.goto("/");
 
   await expect(page).toHaveTitle(/Ducelis Open/i);
@@ -92,6 +92,10 @@ test("scenario browsing and session rehearsal support a second exchange", async 
     "Jordan is covering that block, and I want to make sure the handoff feels clear and fair to you.";
   const secondCounterpartReply =
     "I appreciate the clarification. What should I tell the rest of the team if they ask why the schedule moved?";
+  const offTopicUserTurn =
+    "Also, what do you usually order for lunch around here when the day gets busy?";
+  const redirectedCounterpartReply =
+    "I usually keep it simple, but right now I want to make sure I understand the schedule change. What should I tell the team about the updated coverage?";
   const expectedRequests = [
     {
       scenarioId: "schedule-change-direct-report",
@@ -105,8 +109,17 @@ test("scenario browsing and session rehearsal support a second exchange", async 
         { role: "user", content: secondUserTurn },
       ],
     },
+    {
+      scenarioId: "schedule-change-direct-report",
+      transcript: [
+        { role: "counterpart", content: firstCounterpartReply },
+        { role: "user", content: secondUserTurn },
+        { role: "counterpart", content: secondCounterpartReply },
+        { role: "user", content: offTopicUserTurn },
+      ],
+    },
   ];
-  const replies = [firstCounterpartReply, secondCounterpartReply];
+  const replies = [firstCounterpartReply, secondCounterpartReply, redirectedCounterpartReply];
   let requestIndex = 0;
 
   await page.route("**/api/sessions/counterpart-reply", async (route) => {
@@ -162,6 +175,29 @@ test("scenario browsing and session rehearsal support a second exchange", async 
   );
   await expect(page.getByTestId("session-counterpart-entry").nth(1)).toContainText(
     /i appreciate the clarification\. what should i tell the rest of the team if they ask why the schedule moved\?/i,
+  );
+  await expect(page.getByTestId("session-turn-draft")).toHaveValue("");
+  await expect(page.getByTestId("session-turn-draft")).toBeFocused();
+
+  await page.getByTestId("session-turn-draft").click();
+  await page.getByTestId("session-turn-draft").pressSequentially(offTopicUserTurn);
+  await expect(page.getByTestId("session-turn-submit")).toBeEnabled();
+  await page.getByTestId("session-turn-submit").click();
+
+  await expect(page.getByTestId("session-counterpart-pending")).toContainText(
+    /waiting for the next counterpart reply from the local runtime\./i,
+  );
+
+  await expect(page.getByTestId("session-user-entry")).toHaveCount(3);
+  await expect(page.getByTestId("session-counterpart-entry")).toHaveCount(3);
+  await expect(page.getByTestId("session-user-entry").nth(2)).toContainText(
+    /also, what do you usually order for lunch around here when the day gets busy\?/i,
+  );
+  await expect(page.getByTestId("session-counterpart-entry").nth(2)).toContainText(
+    /i usually keep it simple, but right now i want to make sure i understand the schedule change\. what should i tell the team about the updated coverage\?/i,
+  );
+  await expect(page.getByTestId("session-counterpart-entry").nth(2)).not.toContainText(
+    /assistant|coach|generic chat|menu|restaurant/i,
   );
   await expect(page.getByTestId("session-turn-draft")).toHaveValue("");
   await expect(page.getByTestId("session-turn-draft")).toBeFocused();

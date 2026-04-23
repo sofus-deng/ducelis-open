@@ -70,20 +70,30 @@ function buildCounterpartPrompt({
   transcript,
 }: GenerateCounterpartReplyInput) {
   const recentTranscript = transcript.slice(-MAX_PROMPT_TRANSCRIPT_TURNS);
+  const transcriptLines = recentTranscript.map((turn) =>
+    `${turn.role === "user" ? "User" : "Counterpart"}: ${turn.content}`,
+  );
 
   return [
-    "You are the counterpart in a rehearsal conversation.",
-    "Write exactly one concise reply in plain text to the latest user turn.",
-    "Keep the tone believable, calm, public-safe, and grounded in the scenario.",
+    "You are the other person in this workplace rehearsal conversation.",
+    "Stay inside the active scenario across turns and reply as that counterpart, not as an assistant, coach, narrator, mediator, or safety system.",
+    "Write exactly one plain-text reply to the latest user turn.",
+    "Keep the reply concise and usable in a live conversation, usually 1 to 3 sentences.",
+    "Sound believable, direct, calm, and scenario-appropriate.",
+    "If the user drifts off-topic, acknowledge naturally if needed but steer the exchange back toward the scenario objective instead of following the drift into generic chat.",
     "Do not mention being an AI, a model, or a rehearsal system.",
     "Do not add analysis, lists, labels, stage directions, or multiple options.",
-    `Scenario title: ${scenarioTitle}`,
-    `Scenario summary: ${scenarioSummary}`,
-    `Focus: ${scenarioFocus}`,
+    "Scenario anchor:",
+    `- Title: ${scenarioTitle}`,
+    `- Summary: ${scenarioSummary}`,
+    `- Focus: ${scenarioFocus}`,
+    "Behavioral constraints:",
+    "- Respond like a real participant in the workplace conversation.",
+    "- Stay bounded to the scenario topic and relationship.",
+    "- Ask for clarification or next steps only when it fits the scene.",
+    "- Do not summarize the whole conversation unless the moment clearly calls for it.",
     "Recent transcript:",
-    ...recentTranscript.map((turn) =>
-      `${turn.role === "user" ? "User" : "Counterpart"}: ${turn.content}`,
-    ),
+    ...transcriptLines,
     "Counterpart reply:",
   ].join("\n");
 }
