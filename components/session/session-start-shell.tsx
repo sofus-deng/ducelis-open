@@ -30,6 +30,13 @@ type SessionTurn = SessionTurnInput & {
 
 const SHOW_DEVELOPMENT_RUNTIME_DIAGNOSTICS = process.env.NODE_ENV === "development";
 const MAX_RUNTIME_CONTEXT_TURNS = 4;
+const SESSION_STORAGE_SCHEMA_VERSION = 1;
+
+type PersistedSessionPayload = {
+  schemaVersion: typeof SESSION_STORAGE_SCHEMA_VERSION;
+  turns: SessionTurnInput[];
+  draft: string;
+};
 
 type SessionRuntimeDiagnostics = {
   model?: string;
@@ -96,6 +103,80 @@ function toRequestTurn(turn: SessionTurn): SessionTurnInput {
   };
 }
 
+function getSessionStorageKey(scenarioId: string) {
+  return `ducelis:session:${scenarioId}`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isSessionTurnRole(value: unknown): value is SessionTurnRole {
+  return value === "user" || value === "counterpart";
+}
+
+function isPersistedTurn(value: unknown): value is SessionTurnInput {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return isSessionTurnRole(value.role) && typeof value.content === "string";
+}
+
+function parsePersistedSession(value: string | null): PersistedSessionPayload | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+
+    if (!isRecord(parsed)) {
+      return null;
+    }
+
+    if (parsed.schemaVersion !== SESSION_STORAGE_SCHEMA_VERSION) {
+      return null;
+    }
+
+    if (!Array.isArray(parsed.turns) || !parsed.turns.every(isPersistedTurn)) {
+      return null;
+    }
+
+    if (typeof parsed.draft !== "string") {
+      return null;
+    }
+
+    return {
+      schemaVersion: SESSION_STORAGE_SCHEMA_VERSION,
+      turns: parsed.turns,
+      draft: parsed.draft,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function readPersistedSession(storageKey: string) {
+  return parsePersistedSession(window.localStorage.getItem(storageKey));
+}
+
+function writePersistedSession(storageKey: string, payload: PersistedSessionPayload) {
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(payload));
+  } catch {
+    // Local browser storage can be unavailable or full. The rehearsal remains usable in memory.
+  }
+}
+
+function removePersistedSession(storageKey: string) {
+  try {
+    window.localStorage.removeItem(storageKey);
+  } catch {
+    // Local browser storage can be unavailable. Clearing in-memory state still keeps the UI safe.
+  }
+}
+
 function getNextTurnCues(scenarioFocus: string) {
   const normalizedFocus = scenarioFocus.toLowerCase();
   const cues = ["Clarify the issue"];
@@ -130,6 +211,8 @@ export function SessionStartShell({
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
   const [runtimeDiagnostics, setRuntimeDiagnostics] = useState<SessionRuntimeDiagnostics | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasLoadedPersistedSession, setHasLoadedPersistedSession] = useState(false);
+  const [isConfirmingClear, setIsConfirmingClear] = useState(false);
   const isHydrated = useSyncExternalStore(
     () => () => undefined,
     () => true,
@@ -140,6 +223,8 @@ export function SessionStartShell({
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
   const shouldAutoScrollRef = useRef(false);
   const turnIdRef = useRef(0);
+  const sessionStorageKey = getSessionStorageKey(scenarioId);
+  const hasLocalSessionData = turns.length > 0 || draft.length > 0;
   const nextTurnCues = getNextTurnCues(scenarioFocus);
 
   function createTurn(input: SessionTurnInput): SessionTurn {
@@ -150,6 +235,52 @@ export function SessionStartShell({
       ...input,
     };
   }
+
+  useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
+    const animationFrame = window.requestAnimationFrame(() => {
+      const persistedSession = readPersistedSession(sessionStorageKey);
+
+      if (persistedSession) {
+        turnIdRef.current = persistedSession.turns.length;
+        shouldAutoScrollRef.current = persistedSession.turns.length > 0;
+        setTurns(
+          persistedSession.turns.map((turn, index) => ({
+            id: `session-turn-${index + 1}`,
+            ...turn,
+          })),
+        );
+        setDraft(persistedSession.draft);
+      }
+
+      setRuntimeError(null);
+      setRuntimeDiagnostics(null);
+      setIsConfirmingClear(false);
+      setHasLoadedPersistedSession(true);
+    });
+
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, [isHydrated, sessionStorageKey]);
+
+  useEffect(() => {
+    if (!hasLoadedPersistedSession) {
+      return;
+    }
+
+    if (turns.length === 0 && draft.length === 0) {
+      removePersistedSession(sessionStorageKey);
+      return;
+    }
+
+    writePersistedSession(sessionStorageKey, {
+      schemaVersion: SESSION_STORAGE_SCHEMA_VERSION,
+      turns: turns.map(toRequestTurn),
+      draft,
+    });
+  }, [draft, hasLoadedPersistedSession, sessionStorageKey, turns]);
 
   useEffect(() => {
     const latestTurn = turns[turns.length - 1];
@@ -263,6 +394,22 @@ export function SessionStartShell({
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  function handleClearCurrentSession() {
+    if (isSubmitting) {
+      return;
+    }
+
+    removePersistedSession(sessionStorageKey);
+    turnIdRef.current = 0;
+    shouldAutoScrollRef.current = false;
+    setTurns([]);
+    setDraft("");
+    setRuntimeError(null);
+    setRuntimeDiagnostics(null);
+    setIsConfirmingClear(false);
+    composerRef.current?.focus({ preventScroll: true });
   }
 
   return (
@@ -468,13 +615,58 @@ export function SessionStartShell({
                     Each submit sends your latest turn with a small recent transcript through the
                     server-side local runtime boundary and returns one counterpart reply.
                   </p>
-                  <Button
-                    type="submit"
-                    data-testid="session-turn-submit"
-                    disabled={!draft.trim() || isSubmitting}
-                  >
-                    {isSubmitting ? "Working…" : "Send turn"}
-                  </Button>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                    <Button
+                      type="submit"
+                      data-testid="session-turn-submit"
+                      disabled={!draft.trim() || isSubmitting}
+                    >
+                      {isSubmitting ? "Working…" : "Send turn"}
+                    </Button>
+
+                    {hasLocalSessionData ? (
+                      <div className="flex flex-wrap items-center gap-2 text-xs leading-5 text-[var(--secondary-foreground)] sm:justify-end">
+                        {isConfirmingClear ? (
+                          <>
+                            <p id="clear-current-session-confirmation" className="basis-full sm:basis-auto">
+                              Clear the local transcript and draft for this scenario only?
+                            </p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              data-testid="session-clear-confirm"
+                              aria-describedby="clear-current-session-confirmation"
+                              disabled={isSubmitting}
+                              onClick={handleClearCurrentSession}
+                            >
+                              Clear current session
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              data-testid="session-clear-cancel"
+                              onClick={() => setIsConfirmingClear(false)}
+                            >
+                              Keep session
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            data-testid="session-clear-session"
+                            disabled={isSubmitting}
+                            onClick={() => setIsConfirmingClear(true)}
+                          >
+                            Clear local session
+                          </Button>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
                 </form>
               </div>
             </div>

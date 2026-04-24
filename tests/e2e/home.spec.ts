@@ -346,6 +346,104 @@ test("session transcript keeps mobile scrolling at the page level after multiple
   await expect(page.getByTestId("session-turn-submit")).toBeInViewport();
 });
 
+test("session state persists locally per scenario and can be cleared", async ({ page }) => {
+  await page.goto("/sessions/schedule-change-direct-report");
+  await page.waitForLoadState("networkidle");
+  await expect(page.getByTestId("session-start-shell")).toHaveAttribute("data-hydrated", "true");
+
+  const firstUserTurn =
+    "I want to explain the schedule change, name the impact, and confirm the next step.";
+  const firstCounterpartReply =
+    "Thanks for keeping it focused. What changed in the schedule and who is covering the next block?";
+  const restoredDraft = "I also want to check whether this updated handoff feels workable for you.";
+
+  await page.route("**/api/sessions/counterpart-reply", async (route) => {
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().postDataJSON()).toEqual({
+      scenarioId: "schedule-change-direct-report",
+      transcript: [{ role: "user", content: firstUserTurn }],
+    });
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        counterpartReply: firstCounterpartReply,
+        model: "gemma4:e2b",
+      }),
+    });
+  });
+
+  await expect(page.getByTestId("session-transcript")).toContainText(/add your first turn/i);
+  await page.getByTestId("session-turn-draft").fill(firstUserTurn);
+  await page.getByTestId("session-turn-submit").click();
+
+  await expect(page.getByTestId("session-user-entry")).toHaveCount(1);
+  await expect(page.getByTestId("session-user-entry").first()).toContainText(firstUserTurn);
+  await expect(page.getByTestId("session-counterpart-entry")).toHaveCount(1);
+  await expect(page.getByTestId("session-counterpart-entry").first()).toContainText(firstCounterpartReply);
+
+  await page.getByTestId("session-turn-draft").fill(restoredDraft);
+  await expect(page.getByTestId("session-turn-submit")).toBeEnabled();
+
+  const persistedPayload = await page.evaluate(() =>
+    JSON.parse(window.localStorage.getItem("ducelis:session:schedule-change-direct-report") || "null"),
+  );
+  expect(persistedPayload).toEqual({
+    schemaVersion: 1,
+    turns: [
+      { role: "user", content: firstUserTurn },
+      { role: "counterpart", content: firstCounterpartReply },
+    ],
+    draft: restoredDraft,
+  });
+
+  await page.reload();
+  await expect(page.getByTestId("session-start-shell")).toHaveAttribute("data-hydrated", "true");
+  await expect(page.getByTestId("session-user-entry")).toHaveCount(1);
+  await expect(page.getByTestId("session-user-entry").first()).toContainText(firstUserTurn);
+  await expect(page.getByTestId("session-counterpart-entry")).toHaveCount(1);
+  await expect(page.getByTestId("session-counterpart-entry").first()).toContainText(firstCounterpartReply);
+  await expect(page.getByTestId("session-turn-draft")).toHaveValue(restoredDraft);
+  await expect(page.getByTestId("session-turn-submit")).toBeEnabled();
+
+  await page.goto("/sessions/reset-expectations-on-shared-work");
+  await expect(page.getByTestId("session-start-shell")).toHaveAttribute("data-hydrated", "true");
+  await expect(page.getByTestId("session-transcript")).toContainText(
+    /add your first turn to start the rehearsal/i,
+  );
+  await expect(page.getByTestId("session-user-entry")).toHaveCount(0);
+  await expect(page.getByTestId("session-counterpart-entry")).toHaveCount(0);
+  await expect(page.getByTestId("session-turn-draft")).toHaveValue("");
+
+  await page.goto("/sessions/schedule-change-direct-report");
+  await expect(page.getByTestId("session-start-shell")).toHaveAttribute("data-hydrated", "true");
+  await expect(page.getByTestId("session-user-entry").first()).toContainText(firstUserTurn);
+  await expect(page.getByTestId("session-counterpart-entry").first()).toContainText(firstCounterpartReply);
+  await expect(page.getByTestId("session-turn-draft")).toHaveValue(restoredDraft);
+
+  await page.getByTestId("session-clear-session").click();
+  await expect(page.getByText(/clear the local transcript and draft for this scenario only\?/i)).toBeVisible();
+  await page.getByTestId("session-clear-confirm").click();
+
+  await expect(page.getByTestId("session-transcript")).toContainText(
+    /add your first turn to start the rehearsal/i,
+  );
+  await expect(page.getByTestId("session-user-entry")).toHaveCount(0);
+  await expect(page.getByTestId("session-counterpart-entry")).toHaveCount(0);
+  await expect(page.getByTestId("session-turn-draft")).toHaveValue("");
+  await expect(page.getByTestId("session-turn-submit")).toBeDisabled();
+
+  const storageAfterClear = await page.evaluate(() => ({
+    currentScenario: window.localStorage.getItem("ducelis:session:schedule-change-direct-report"),
+    otherScenario: window.localStorage.getItem("ducelis:session:reset-expectations-on-shared-work"),
+  }));
+  expect(storageAfterClear).toEqual({
+    currentScenario: null,
+    otherScenario: null,
+  });
+});
+
 test("session rehearsal preserves prior turns when a later local reply fails", async ({ page }) => {
   await page.goto("/sessions/schedule-change-direct-report");
   await expect(page.getByTestId("session-start-shell")).toHaveAttribute("data-hydrated", "true");
