@@ -81,6 +81,13 @@ test("scenario browsing and session rehearsal keep counterpart replies grounded 
   await expect(page.getByTestId("session-transcript")).toContainText(
     /add your first turn to start the rehearsal\. the transcript stays here as the conversation continues\./i,
   );
+  await expect(page.getByTestId("session-turn-guidance")).toContainText(/next turn cues/i);
+  await expect(page.getByTestId("session-turn-guidance")).toContainText(/clarify the issue/i);
+  await expect(page.getByTestId("session-turn-guidance")).toContainText(/name what changed/i);
+  await expect(page.getByTestId("session-turn-guidance")).toContainText(/confirm the next step/i);
+  await expect(page.getByTestId("session-turn-guidance")).toContainText(
+    /keep it tied to review a schedule change with a direct report\./i,
+  );
 
   await expect(page.getByTestId("session-turn-submit")).toBeDisabled();
 
@@ -153,8 +160,13 @@ test("scenario browsing and session rehearsal keep counterpart replies grounded 
   await expect(page.getByTestId("session-user-entry").first()).toContainText(
     /i want to walk through the schedule change, explain what shifted, and confirm the next step with you\./i,
   );
+  await expect(page.getByTestId("session-user-entry").first()).toHaveAttribute("data-turn-role", "user");
   await expect(page.getByTestId("session-counterpart-entry").first()).toContainText(
     /thanks for walking me through it\. can you clarify who is covering the upcoming work block now\?/i,
+  );
+  await expect(page.getByTestId("session-counterpart-entry").first()).toHaveAttribute(
+    "data-turn-role",
+    "counterpart",
   );
   await expect(page.getByTestId("session-turn-draft")).toHaveValue("");
   await expect(page.getByTestId("session-turn-draft")).toBeFocused();
@@ -167,6 +179,7 @@ test("scenario browsing and session rehearsal keep counterpart replies grounded 
   await expect(page.getByTestId("session-counterpart-pending")).toContainText(
     /waiting for the next counterpart reply from the local runtime\./i,
   );
+  await expect(page.getByTestId("session-counterpart-pending")).toHaveAttribute("data-state", "pending");
 
   await expect(page.getByTestId("session-user-entry")).toHaveCount(2);
   await expect(page.getByTestId("session-counterpart-entry")).toHaveCount(2);
@@ -415,14 +428,23 @@ test("session rehearsal preserves prior turns when a later local reply fails", a
 
   await expect(page.getByTestId("session-user-entry")).toHaveCount(2);
   await expect(page.getByTestId("session-counterpart-entry")).toHaveCount(1);
+  await expect(page.getByTestId("session-user-entry").first()).toContainText(
+    /i want to explain the schedule change clearly and make sure we agree on the next step\./i,
+  );
+  await expect(page.getByTestId("session-counterpart-entry").first()).toContainText(
+    /thanks for being direct about it\. what changed in the plan from the original schedule\?/i,
+  );
   await expect(page.getByTestId("session-user-entry").nth(1)).toContainText(
     /the original schedule no longer works, and i want to explain the updated coverage without leaving gaps\./i,
   );
+  await expect(page.getByTestId("session-user-entry").nth(1)).toHaveAttribute("data-turn-role", "user");
   await expect(page.getByTestId("session-runtime-error")).toContainText(
     /the local runtime did not respond before the configured timeout\. confirm ollama is running locally, then retry or increase ollama_timeout_ms and try again\./i,
   );
+  await expect(page.getByTestId("session-runtime-error")).toHaveAttribute("data-state", "error");
   await expect(page.getByTestId("session-runtime-error")).toContainText(/runtime status/i);
-  await expect(page.getByTestId("session-runtime-error")).not.toContainText(/technical details/i);
+  await expect(page.getByTestId("session-runtime-diagnostics")).toHaveCount(0);
+  await expect(page.getByTestId("session-runtime-error")).not.toContainText(/development details/i);
   await expect(page.getByTestId("session-runtime-error")).not.toContainText(/gemma4:e2b/i);
   await expect(page.getByTestId("session-runtime-error")).not.toContainText(/http:\/\/127\.0\.0\.1:11434/i);
   await expect(page.getByTestId("session-turn-submit")).toBeEnabled();

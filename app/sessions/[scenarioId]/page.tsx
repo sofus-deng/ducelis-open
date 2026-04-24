@@ -65,6 +65,7 @@ export default async function SessionPage({ params }: SessionPageProps) {
       <SessionStartShell
         scenarioId={scenario.id}
         scenarioTitle={scenario.title}
+        scenarioFocus={scenario.focus}
         sidebar={
           <>
           <Card as="article" className="session-app-shell__sidebar-card">

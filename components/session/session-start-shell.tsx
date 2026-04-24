@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 type SessionStartShellProps = {
   scenarioId: string;
   scenarioTitle: string;
+  scenarioFocus: string;
   sidebar: ReactNode;
 };
 
@@ -95,7 +96,35 @@ function toRequestTurn(turn: SessionTurn): SessionTurnInput {
   };
 }
 
-export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: SessionStartShellProps) {
+function getNextTurnCues(scenarioFocus: string) {
+  const normalizedFocus = scenarioFocus.toLowerCase();
+  const cues = ["Clarify the issue"];
+
+  if (normalizedFocus.includes("expectation")) {
+    cues.push("Restate the expectation");
+  } else if (normalizedFocus.includes("impact")) {
+    cues.push("Acknowledge the impact");
+  } else {
+    cues.push("Name what changed");
+  }
+
+  if (normalizedFocus.includes("agreement")) {
+    cues.push("Ask for agreement");
+  } else {
+    cues.push("Confirm understanding");
+  }
+
+  cues.push("Confirm the next step");
+
+  return cues;
+}
+
+export function SessionStartShell({
+  scenarioId,
+  scenarioTitle,
+  scenarioFocus,
+  sidebar,
+}: SessionStartShellProps) {
   const [draft, setDraft] = useState("");
   const [turns, setTurns] = useState<SessionTurn[]>([]);
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
@@ -111,6 +140,7 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
   const transcriptEndRef = useRef<HTMLDivElement | null>(null);
   const shouldAutoScrollRef = useRef(false);
   const turnIdRef = useRef(0);
+  const nextTurnCues = getNextTurnCues(scenarioFocus);
 
   function createTurn(input: SessionTurnInput): SessionTurn {
     turnIdRef.current += 1;
@@ -138,19 +168,23 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
 
     const animationFrame = window.requestAnimationFrame(() => {
       const transcriptViewport = transcriptViewportRef.current;
+      let hasInternalScroll = false;
 
       if (transcriptViewport) {
         const { overflowY } = window.getComputedStyle(transcriptViewport);
-        const hasInternalScroll =
+        hasInternalScroll =
           (overflowY === "auto" || overflowY === "scroll") &&
           transcriptViewport.scrollHeight > transcriptViewport.clientHeight;
 
         if (hasInternalScroll) {
-          transcriptViewport.scrollTo({ top: transcriptViewport.scrollHeight });
+          transcriptViewport.scrollTop = transcriptViewport.scrollHeight;
         }
       }
 
-      transcriptEndRef.current?.scrollIntoView({ block: "end" });
+      if (!hasInternalScroll) {
+        transcriptEndRef.current?.scrollIntoView({ block: "end" });
+      }
+
       shouldAutoScrollRef.current = false;
     });
 
@@ -252,7 +286,7 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
           </CardHeader>
           <CardContent className="flex min-h-0 flex-1 flex-col">
             <div
-              className="session-chat-workspace__frame flex min-h-[24rem] flex-1 flex-col rounded-3xl border border-[color:rgba(35,68,127,0.14)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,250,255,0.96))] shadow-[0_18px_48px_rgba(15,23,42,0.05)]"
+              className="session-chat-workspace__frame flex min-h-[24rem] flex-1 flex-col rounded-3xl border border-[color:rgba(35,68,127,0.14)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,250,255,0.96))] shadow-[0_18px_48px_rgba(15,23,42,0.05)] lg:min-h-0"
             >
               <div
                 data-testid="session-transcript"
@@ -264,16 +298,27 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
                     {turns.map((turn) => (
                       <article
                         key={turn.id}
+                        data-turn-role={turn.role}
                         data-testid={turn.role === "user" ? "session-user-entry" : "session-counterpart-entry"}
                         className={
                           turn.role === "user"
-                            ? "max-w-3xl self-end rounded-[1.5rem] border border-[color:rgba(35,68,127,0.16)] bg-white px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] sm:px-5"
-                            : "max-w-3xl rounded-[1.5rem] border border-[color:rgba(47,90,166,0.18)] bg-[color:rgba(248,251,255,0.95)] px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] sm:px-5"
+                            ? "max-w-3xl self-end rounded-[1.5rem] border border-[color:rgba(35,68,127,0.22)] bg-white px-4 py-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] ring-1 ring-[color:rgba(35,68,127,0.04)] sm:px-5"
+                            : "max-w-3xl rounded-[1.5rem] border border-[color:rgba(47,90,166,0.16)] bg-[color:rgba(247,250,255,0.96)] px-4 py-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)] ring-1 ring-[color:rgba(47,90,166,0.04)] sm:px-5"
                         }
                       >
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--secondary-foreground)]">
-                          {getTurnLabel(turn.role)}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <span
+                            aria-hidden="true"
+                            className={
+                              turn.role === "user"
+                                ? "h-2 w-2 rounded-full bg-[var(--accent-strong)]"
+                                : "h-2 w-2 rounded-full bg-[color:rgba(47,90,166,0.46)]"
+                            }
+                          />
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--secondary-foreground)]">
+                            {getTurnLabel(turn.role)}
+                          </p>
+                        </div>
                         <p className="mt-3 whitespace-pre-wrap leading-7 text-[var(--foreground)]">
                           {turn.content}
                         </p>
@@ -283,13 +328,20 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
                     {isSubmitting ? (
                       <div
                         data-testid="session-counterpart-pending"
+                        data-state="pending"
                         role="status"
                         aria-live="polite"
-                        className="max-w-3xl rounded-[1.5rem] border border-[color:rgba(47,90,166,0.16)] bg-[color:rgba(248,251,255,0.95)] px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.04)] sm:px-5"
+                        className="max-w-3xl rounded-[1.5rem] border border-dashed border-[color:rgba(47,90,166,0.2)] bg-[color:rgba(248,251,255,0.8)] px-4 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.035)] sm:px-5"
                       >
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--secondary-foreground)]">
-                          Counterpart
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <span
+                            aria-hidden="true"
+                            className="h-2 w-2 rounded-full bg-[color:rgba(47,90,166,0.34)]"
+                          />
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--secondary-foreground)]">
+                            Counterpart
+                          </p>
+                        </div>
                         <div className="mt-3 flex items-start gap-3">
                           <span
                             aria-hidden="true"
@@ -307,18 +359,28 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
                         role="status"
                         aria-live="polite"
                         data-testid="session-runtime-error"
-                        className="max-w-3xl rounded-[1.5rem] border border-[color:rgba(180,106,60,0.28)] bg-[color:rgba(255,247,240,0.92)] px-4 py-4 text-sm leading-7 text-[color:rgba(109,61,25,0.96)] sm:px-5"
+                        data-state="error"
+                        className="max-w-3xl rounded-[1.5rem] border border-[color:rgba(180,106,60,0.2)] bg-[color:rgba(255,250,245,0.82)] px-4 py-4 text-sm leading-7 text-[color:rgba(109,61,25,0.92)] shadow-[0_8px_24px_rgba(109,61,25,0.04)] sm:px-5"
                       >
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:rgba(109,61,25,0.88)]">
-                          Runtime status
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <span
+                            aria-hidden="true"
+                            className="h-2 w-2 rounded-full bg-[color:rgba(180,106,60,0.5)]"
+                          />
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:rgba(109,61,25,0.78)]">
+                            Runtime status
+                          </p>
+                        </div>
                         <p className="mt-3">{runtimeError}</p>
 
                         {SHOW_DEVELOPMENT_RUNTIME_DIAGNOSTICS && runtimeDiagnostics ? (
-                          <div className="mt-4 rounded-2xl border border-[color:rgba(180,106,60,0.18)] bg-white/50 px-3 py-3">
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:rgba(109,61,25,0.88)]">
-                              Technical details (development only)
-                            </p>
+                          <details
+                            data-testid="session-runtime-diagnostics"
+                            className="mt-3 rounded-2xl border border-[color:rgba(180,106,60,0.14)] bg-white/40 px-3 py-2 text-[color:rgba(109,61,25,0.82)]"
+                          >
+                            <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:rgba(109,61,25,0.72)]">
+                              Development details
+                            </summary>
 
                             <dl className="mt-2 grid gap-2 text-xs leading-6 text-[color:rgba(109,61,25,0.92)] sm:grid-cols-2">
                               <div>
@@ -343,7 +405,7 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
                                 </dd>
                               </div>
                             </dl>
-                          </div>
+                          </details>
                         ) : null}
                       </div>
                     ) : null}
@@ -363,11 +425,34 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
                 <div ref={transcriptEndRef} aria-hidden="true" className="h-px w-full shrink-0" />
               </div>
 
-              <div className="border-t border-[color:rgba(35,68,127,0.12)] bg-white/80 px-5 py-5 backdrop-blur-sm sm:px-6">
-                <form className="space-y-4" onSubmit={handleSubmit}>
+              <div className="border-t border-[color:rgba(35,68,127,0.12)] bg-white/80 px-5 py-4 backdrop-blur-sm sm:px-6">
+                <form className="space-y-3" onSubmit={handleSubmit}>
                   <label htmlFor="turn-draft" className="text-sm font-semibold text-[var(--foreground)]">
                     Your message
                   </label>
+                  <div
+                    data-testid="session-turn-guidance"
+                    className="rounded-2xl border border-[color:rgba(35,68,127,0.1)] bg-[color:rgba(248,251,255,0.68)] px-3 py-2 text-sm text-[var(--secondary-foreground)]"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium text-[var(--foreground)]">Next turn cues</p>
+                      <span className="text-xs text-[var(--secondary-foreground)]" aria-hidden="true">
+                        ·
+                      </span>
+                      <p className="text-xs leading-5 text-[var(--secondary-foreground)]">Use one as needed.</p>
+                    </div>
+                    <p className="sr-only">Keep it tied to {scenarioTitle}.</p>
+                    <ul className="mt-2 flex flex-wrap gap-2" aria-label="Next turn cues">
+                      {nextTurnCues.map((cue) => (
+                        <li
+                          key={cue}
+                          className="rounded-full border border-[color:rgba(35,68,127,0.1)] bg-white/70 px-3 py-1 text-xs font-medium text-[var(--secondary-foreground)]"
+                        >
+                          {cue}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                   <textarea
                     ref={composerRef}
                     id="turn-draft"
@@ -377,9 +462,9 @@ export function SessionStartShell({ scenarioId, scenarioTitle, sidebar }: Sessio
                     onChange={(event) => setDraft(event.target.value)}
                     placeholder="Continue with a clear explanation, acknowledgement, question, or request."
                     disabled={isSubmitting}
-                    className="min-h-32 w-full rounded-3xl border border-[var(--border)] bg-white px-4 py-4 text-base leading-7 text-[var(--foreground)] shadow-[0_12px_30px_rgba(15,23,42,0.06)] outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:rgba(47,90,166,0.18)] sm:min-h-40"
+                    className="min-h-28 w-full rounded-3xl border border-[var(--border)] bg-white px-4 py-4 text-base leading-7 text-[var(--foreground)] shadow-[0_12px_30px_rgba(15,23,42,0.06)] outline-none transition focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:rgba(47,90,166,0.18)] sm:min-h-32"
                   />
-                  <p className="text-sm leading-6 text-[var(--secondary-foreground)]">
+                  <p className="text-xs leading-5 text-[var(--secondary-foreground)]">
                     Each submit sends your latest turn with a small recent transcript through the
                     server-side local runtime boundary and returns one counterpart reply.
                   </p>
