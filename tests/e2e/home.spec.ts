@@ -216,6 +216,83 @@ test("scenario browsing and session rehearsal keep counterpart replies grounded 
   await expect(page.getByTestId("session-turn-draft")).toBeFocused();
 });
 
+test("scenario entry reflects saved local rehearsal state per scenario", async ({ page }) => {
+  const currentScenarioId = "schedule-change-direct-report";
+  const otherScenarioId = "reset-expectations-on-shared-work";
+  const firstUserTurn =
+    "I want to explain the schedule change, name the impact, and confirm the next step.";
+  const firstCounterpartReply =
+    "Thanks for keeping it focused. What changed in the schedule and who is covering the next block?";
+  const restoredDraft = "I also want to check whether this updated handoff feels workable for you.";
+
+  await page.goto(`/scenarios/${currentScenarioId}`);
+  await expect(page.getByTestId("scenario-entry-cta")).toContainText(/start rehearsal session/i);
+  await expect(page.getByTestId("scenario-entry-cta")).not.toContainText(/resume rehearsal/i);
+  await expect(page.getByTestId("scenario-saved-state-hint")).toHaveCount(0);
+
+  await page.getByRole("link", { name: /start rehearsal session/i }).click();
+  await expect(page).toHaveURL(new RegExp(`/sessions/${currentScenarioId}$`));
+  await expect(page.getByTestId("session-start-shell")).toHaveAttribute("data-hydrated", "true");
+
+  await page.route("**/api/sessions/counterpart-reply", async (route) => {
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().postDataJSON()).toEqual({
+      scenarioId: currentScenarioId,
+      transcript: [{ role: "user", content: firstUserTurn }],
+    });
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        counterpartReply: firstCounterpartReply,
+        model: "gemma4:e2b",
+      }),
+    });
+  });
+
+  await page.getByTestId("session-turn-draft").fill(firstUserTurn);
+  await page.getByTestId("session-turn-submit").click();
+
+  await expect(page.getByTestId("session-user-entry")).toHaveCount(1);
+  await expect(page.getByTestId("session-user-entry").first()).toContainText(firstUserTurn);
+  await expect(page.getByTestId("session-counterpart-entry")).toHaveCount(1);
+  await expect(page.getByTestId("session-counterpart-entry").first()).toContainText(firstCounterpartReply);
+
+  await page.getByTestId("session-turn-draft").fill(restoredDraft);
+  await expect(page.getByTestId("session-turn-submit")).toBeEnabled();
+
+  await page.goto(`/scenarios/${currentScenarioId}`);
+  await expect(page.getByTestId("scenario-entry-cta")).toContainText(/resume rehearsal/i);
+  await expect(page.getByTestId("scenario-saved-state-hint")).toContainText(/saved on this device/i);
+
+  await page.getByRole("link", { name: /resume rehearsal/i }).click();
+  await expect(page).toHaveURL(new RegExp(`/sessions/${currentScenarioId}$`));
+  await expect(page.getByTestId("session-start-shell")).toHaveAttribute("data-hydrated", "true");
+  await expect(page.getByTestId("session-user-entry")).toHaveCount(1);
+  await expect(page.getByTestId("session-user-entry").first()).toContainText(firstUserTurn);
+  await expect(page.getByTestId("session-counterpart-entry")).toHaveCount(1);
+  await expect(page.getByTestId("session-counterpart-entry").first()).toContainText(firstCounterpartReply);
+  await expect(page.getByTestId("session-turn-draft")).toHaveValue(restoredDraft);
+
+  await page.goto(`/scenarios/${otherScenarioId}`);
+  await expect(page.getByTestId("scenario-entry-cta")).toContainText(/start rehearsal session/i);
+  await expect(page.getByTestId("scenario-entry-cta")).not.toContainText(/resume rehearsal/i);
+  await expect(page.getByTestId("scenario-saved-state-hint")).toHaveCount(0);
+
+  await page.goto(`/sessions/${currentScenarioId}`);
+  await expect(page.getByTestId("session-start-shell")).toHaveAttribute("data-hydrated", "true");
+  await page.getByTestId("session-clear-session").click();
+  await expect(page.getByText(/clear the saved transcript and draft for this scenario only\?/i)).toBeVisible();
+  await page.getByTestId("session-clear-confirm").click();
+  await expect(page.getByTestId("session-turn-draft")).toHaveValue("");
+
+  await page.goto(`/scenarios/${currentScenarioId}`);
+  await expect(page.getByTestId("scenario-entry-cta")).toContainText(/start rehearsal session/i);
+  await expect(page.getByTestId("scenario-entry-cta")).not.toContainText(/resume rehearsal/i);
+  await expect(page.getByTestId("scenario-saved-state-hint")).toHaveCount(0);
+});
+
 test("session transcript keeps the newest turn visible when desktop overflow occurs", async ({ page }) => {
   await page.goto("/sessions/schedule-change-direct-report");
   await page.waitForLoadState("networkidle");
@@ -423,7 +500,7 @@ test("session state persists locally per scenario and can be cleared", async ({ 
   await expect(page.getByTestId("session-turn-draft")).toHaveValue(restoredDraft);
 
   await page.getByTestId("session-clear-session").click();
-  await expect(page.getByText(/clear the local transcript and draft for this scenario only\?/i)).toBeVisible();
+  await expect(page.getByText(/clear the saved transcript and draft for this scenario only\?/i)).toBeVisible();
   await page.getByTestId("session-clear-confirm").click();
 
   await expect(page.getByTestId("session-transcript")).toContainText(

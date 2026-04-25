@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScenarioEntryAction } from "@/components/session/scenario-entry-action";
 import { getScenarioById, scenarios } from "../../../content/scenarios";
 
 type ScenarioDetailPageProps = {
@@ -112,9 +112,7 @@ export default async function ScenarioDetailPage({
           </CardHeader>
           <CardContent className="space-y-6">
             <CardDescription className="leading-7">{scenario.statusNote}</CardDescription>
-            <Button asChild className="mt-6">
-              <Link href={`/sessions/${scenario.id}`}>Start rehearsal session</Link>
-            </Button>
+            <ScenarioEntryAction scenarioId={scenario.id} />
           </CardContent>
         </Card>
       </section>

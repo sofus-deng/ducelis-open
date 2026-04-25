@@ -267,6 +267,28 @@ a {
   min-width: 0;
 }
 
+.scenario-entry-action {
+  display: flex;
+  width: fit-content;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+
+.scenario-entry-action__hint {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(35, 68, 127, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--secondary-foreground);
+}
+
 @media (min-width: 640px) {
   .hero-panel {
     border-radius: 1.75rem;

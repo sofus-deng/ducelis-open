@@ -629,7 +629,7 @@ export function SessionStartShell({
                         {isConfirmingClear ? (
                           <>
                             <p id="clear-current-session-confirmation" className="basis-full sm:basis-auto">
-                              Clear the local transcript and draft for this scenario only?
+                              Clear the saved transcript and draft for this scenario only?
                             </p>
                             <Button
                               type="button"
@@ -640,7 +640,7 @@ export function SessionStartShell({
                               disabled={isSubmitting}
                               onClick={handleClearCurrentSession}
                             >
-                              Clear current session
+                              Clear rehearsal
                             </Button>
                             <Button
                               type="button"
@@ -649,7 +649,7 @@ export function SessionStartShell({
                               data-testid="session-clear-cancel"
                               onClick={() => setIsConfirmingClear(false)}
                             >
-                              Keep session
+                              Keep rehearsal
                             </Button>
                           </>
                         ) : (
@@ -661,7 +661,7 @@ export function SessionStartShell({
                             disabled={isSubmitting}
                             onClick={() => setIsConfirmingClear(true)}
                           >
-                            Clear local session
+                            Clear this rehearsal
                           </Button>
                         )}
                       </div>
