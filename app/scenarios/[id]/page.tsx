@@ -106,14 +106,8 @@ export default async function ScenarioDetailPage({
           </CardContent>
         </Card>
 
-        <Card as="article" className="h-full">
-          <CardHeader className="pb-5">
-            <CardTitle as="h2">Start rehearsal</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <CardDescription className="leading-7">{scenario.statusNote}</CardDescription>
-            <ScenarioEntryAction scenarioId={scenario.id} />
-          </CardContent>
+        <Card as="article" className="h-full" data-testid="scenario-entry-card">
+          <ScenarioEntryAction scenarioId={scenario.id} freshDescription={scenario.statusNote} />
         </Card>
       </section>
     </main>

@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 type ScenarioEntryActionProps = {
   scenarioId: string;
+  freshDescription: string;
 };
 
 type SessionTurnRole = "user" | "counterpart";
@@ -62,7 +64,7 @@ function hasSavedRehearsal(value: string | null) {
   }
 }
 
-export function ScenarioEntryAction({ scenarioId }: ScenarioEntryActionProps) {
+export function ScenarioEntryAction({ scenarioId, freshDescription }: ScenarioEntryActionProps) {
   const hasSavedState = useSyncExternalStore(
     () => () => undefined,
     () => {
@@ -74,20 +76,41 @@ export function ScenarioEntryAction({ scenarioId }: ScenarioEntryActionProps) {
     },
     () => false,
   );
+  const entryCopy = hasSavedState
+    ? {
+        title: "Resume rehearsal",
+        description: "Continue the saved transcript and draft on this device.",
+        cta: "Resume rehearsal",
+      }
+    : {
+        title: "Start rehearsal",
+        description: freshDescription,
+        cta: "Start rehearsal session",
+      };
 
   return (
-    <div className="scenario-entry-action" data-testid="scenario-entry-action">
-      <Button asChild className="mt-6" data-testid="scenario-entry-cta">
-        <Link href={`/sessions/${scenarioId}`}>
-          {hasSavedState ? "Resume rehearsal" : "Start rehearsal session"}
-        </Link>
-      </Button>
+    <>
+      <CardHeader className="pb-5">
+        <CardTitle as="h2" data-testid="scenario-entry-title">
+          {entryCopy.title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <CardDescription className="leading-7" data-testid="scenario-entry-description">
+          {entryCopy.description}
+        </CardDescription>
+        <div className="scenario-entry-action" data-testid="scenario-entry-action">
+          <Button asChild data-testid="scenario-entry-cta">
+            <Link href={`/sessions/${scenarioId}`}>{entryCopy.cta}</Link>
+          </Button>
 
-      {hasSavedState ? (
-        <p className="scenario-entry-action__hint" data-testid="scenario-saved-state-hint">
-          Saved on this device
-        </p>
-      ) : null}
-    </div>
+          {hasSavedState ? (
+            <p className="scenario-entry-action__hint" data-testid="scenario-saved-state-hint">
+              Saved on this device
+            </p>
+          ) : null}
+        </div>
+      </CardContent>
+    </>
   );
 }

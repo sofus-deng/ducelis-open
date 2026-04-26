@@ -226,7 +226,10 @@ test("scenario entry reflects saved local rehearsal state per scenario", async (
   const restoredDraft = "I also want to check whether this updated handoff feels workable for you.";
 
   await page.goto(`/scenarios/${currentScenarioId}`);
-  await expect(page.getByTestId("scenario-entry-cta")).toContainText(/start rehearsal session/i);
+  await expect(page.getByTestId("scenario-entry-card")).toContainText(/start rehearsal/i);
+  await expect(page.getByTestId("scenario-entry-title")).toHaveText("Start rehearsal");
+  await expect(page.getByTestId("scenario-entry-description")).toBeVisible();
+  await expect(page.getByTestId("scenario-entry-cta")).toHaveText("Start rehearsal session");
   await expect(page.getByTestId("scenario-entry-cta")).not.toContainText(/resume rehearsal/i);
   await expect(page.getByTestId("scenario-saved-state-hint")).toHaveCount(0);
 
@@ -263,8 +266,15 @@ test("scenario entry reflects saved local rehearsal state per scenario", async (
   await expect(page.getByTestId("session-turn-submit")).toBeEnabled();
 
   await page.goto(`/scenarios/${currentScenarioId}`);
-  await expect(page.getByTestId("scenario-entry-cta")).toContainText(/resume rehearsal/i);
+  await expect(page.getByTestId("scenario-entry-title")).toHaveText("Resume rehearsal");
+  await expect(page.getByTestId("scenario-entry-description")).toHaveText(
+    "Continue the saved transcript and draft on this device.",
+  );
+  await expect(page.getByTestId("scenario-entry-cta")).toHaveText("Resume rehearsal");
   await expect(page.getByTestId("scenario-saved-state-hint")).toContainText(/saved on this device/i);
+  await expect(
+    page.getByTestId("scenario-entry-card").getByRole("heading", { name: "Start rehearsal" }),
+  ).toHaveCount(0);
 
   await page.getByRole("link", { name: /resume rehearsal/i }).click();
   await expect(page).toHaveURL(new RegExp(`/sessions/${currentScenarioId}$`));
@@ -276,7 +286,8 @@ test("scenario entry reflects saved local rehearsal state per scenario", async (
   await expect(page.getByTestId("session-turn-draft")).toHaveValue(restoredDraft);
 
   await page.goto(`/scenarios/${otherScenarioId}`);
-  await expect(page.getByTestId("scenario-entry-cta")).toContainText(/start rehearsal session/i);
+  await expect(page.getByTestId("scenario-entry-title")).toHaveText("Start rehearsal");
+  await expect(page.getByTestId("scenario-entry-cta")).toHaveText("Start rehearsal session");
   await expect(page.getByTestId("scenario-entry-cta")).not.toContainText(/resume rehearsal/i);
   await expect(page.getByTestId("scenario-saved-state-hint")).toHaveCount(0);
 
@@ -288,7 +299,8 @@ test("scenario entry reflects saved local rehearsal state per scenario", async (
   await expect(page.getByTestId("session-turn-draft")).toHaveValue("");
 
   await page.goto(`/scenarios/${currentScenarioId}`);
-  await expect(page.getByTestId("scenario-entry-cta")).toContainText(/start rehearsal session/i);
+  await expect(page.getByTestId("scenario-entry-title")).toHaveText("Start rehearsal");
+  await expect(page.getByTestId("scenario-entry-cta")).toHaveText("Start rehearsal session");
   await expect(page.getByTestId("scenario-entry-cta")).not.toContainText(/resume rehearsal/i);
   await expect(page.getByTestId("scenario-saved-state-hint")).toHaveCount(0);
 });
