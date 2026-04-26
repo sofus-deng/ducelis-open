@@ -355,7 +355,29 @@ test("session transcript keeps the newest turn visible when desktop overflow occ
 
   await expect(page.getByTestId("session-user-entry")).toHaveCount(userTurns.length);
   await expect(page.getByTestId("session-counterpart-entry")).toHaveCount(counterpartReplies.length);
-  await expect(page.getByTestId("session-counterpart-entry").last()).toBeInViewport();
+  const newestTurnComfort = await page.getByTestId("session-transcript").evaluate((element) => {
+    const counterpartEntries = element.querySelectorAll<HTMLElement>('[data-testid="session-counterpart-entry"]');
+    const newestTurn = counterpartEntries[counterpartEntries.length - 1];
+
+    if (!newestTurn) {
+      return null;
+    }
+
+    const transcriptRect = element.getBoundingClientRect();
+    const newestTurnRect = newestTurn.getBoundingClientRect();
+
+    return {
+      bottomGap: transcriptRect.bottom - newestTurnRect.bottom,
+      isWithinTranscriptViewport:
+        newestTurnRect.top >= transcriptRect.top && newestTurnRect.bottom <= transcriptRect.bottom,
+      topGap: newestTurnRect.top - transcriptRect.top,
+    };
+  });
+
+  expect(newestTurnComfort).not.toBeNull();
+  expect(newestTurnComfort?.isWithinTranscriptViewport).toBe(true);
+  expect(newestTurnComfort?.topGap).toBeGreaterThanOrEqual(0);
+  expect(newestTurnComfort?.bottomGap).toBeGreaterThanOrEqual(24);
   await expect(page.getByTestId("session-turn-submit")).toBeInViewport();
 
   const transcriptMetrics = await page.getByTestId("session-transcript").evaluate((element) => ({

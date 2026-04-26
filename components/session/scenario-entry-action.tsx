@@ -90,12 +90,12 @@ export function ScenarioEntryAction({ scenarioId, freshDescription }: ScenarioEn
 
   return (
     <>
-      <CardHeader className="pb-5">
+      <CardHeader className="scenario-entry-card__header pb-5">
         <CardTitle as="h2" data-testid="scenario-entry-title">
           {entryCopy.title}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="scenario-entry-card__content space-y-6">
         <CardDescription className="leading-7" data-testid="scenario-entry-description">
           {entryCopy.description}
         </CardDescription>

@@ -441,7 +441,7 @@ export function SessionStartShell({
                 className="session-chat-workspace__transcript flex min-h-[20rem] flex-1 flex-col gap-4 overflow-visible px-5 py-5 sm:gap-5 sm:px-6 sm:py-6 lg:min-h-0 lg:overflow-y-auto lg:pr-5"
               >
                 {turns.length ? (
-                  <div className="flex flex-1 flex-col gap-4 sm:gap-5">
+                  <div className="session-chat-workspace__turn-list flex flex-1 flex-col gap-4 sm:gap-5">
                     {turns.map((turn) => (
                       <article
                         key={turn.id}
@@ -569,10 +569,10 @@ export function SessionStartShell({
                   </div>
                 )}
 
-                <div ref={transcriptEndRef} aria-hidden="true" className="h-px w-full shrink-0" />
+                <div ref={transcriptEndRef} aria-hidden="true" className="h-8 w-full shrink-0" />
               </div>
 
-              <div className="border-t border-[color:rgba(35,68,127,0.12)] bg-white/80 px-5 py-4 backdrop-blur-sm sm:px-6">
+              <div className="session-chat-workspace__composer border-t border-[color:rgba(35,68,127,0.12)] bg-white/80 px-5 py-4 backdrop-blur-sm sm:px-6">
                 <form className="space-y-3" onSubmit={handleSubmit}>
                   <label htmlFor="turn-draft" className="text-sm font-semibold text-[var(--foreground)]">
                     Your message
@@ -625,7 +625,7 @@ export function SessionStartShell({
                     </Button>
 
                     {hasLocalSessionData ? (
-                      <div className="flex flex-wrap items-center gap-2 text-xs leading-5 text-[var(--secondary-foreground)] sm:justify-end">
+                      <div className="session-clear-action flex flex-wrap items-center gap-2 text-xs leading-5 text-[var(--secondary-foreground)] sm:justify-end">
                         {isConfirmingClear ? (
                           <>
                             <p id="clear-current-session-confirmation" className="basis-full sm:basis-auto">
