@@ -25,6 +25,8 @@
     "Acknowledge the likely impact on the other person.",
     "Confirm the agreed next step before closing."
   ],
+  "context": "A teammate needs clarity about a schedule adjustment that affects who covers an upcoming work block. The goal is to explain the change, confirm understanding, and keep the conversation steady and practical.",
+  "focus": "Clear explanation, calm tone, and explicit confirmation of next steps.",
   "sourceRefs": [
     {
       "label": "Placeholder public-safe reference",

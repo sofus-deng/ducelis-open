@@ -57,6 +57,9 @@ artifacts/
 *.sqlite3
 *.db
 
+# agent tooling
+.kilo/plans/
+
 # misc
 *.tsbuildinfo
 next-env.d.ts

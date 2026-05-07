@@ -25,6 +25,8 @@
     "Name the expected ownership or handoff point.",
     "End with a simple agreement that both sides can follow."
   ],
+  "context": "A recurring collaboration task has started to slip because ownership assumptions are inconsistent. The conversation should clarify responsibilities without escalating the tone or assigning blame.",
+  "focus": "Describe the gap, restate the shared expectation, and ask for a workable agreement.",
   "runtime": {
     "hint": "local-ollama"
   }

@@ -46,14 +46,14 @@ A Library is a potential future grouping mechanism that may organize multiple pa
 | Field | Type | Description |
 |-------|------|-------------|
 | `sourceRefs` | object[] | Array of `{ label: string, url: string }` entries. Used for attribution or public reference links. Do not include private source documents or internal links |
+| `context` | string | Extended scenario context used by the public scenario surface. Describes the background situation the learner will navigate |
+| `focus` | string | Short guidance phrase describing the conversational focus for the rehearsal |
 | `runtime` | object | `{ hint: string }` for runtime-specific guidance, such as `"local-ollama"` |
 
 ### Reserved fields
 
 The following field names are reserved for future compatibility and should not be used in v1 packs:
 
-- `context`
-- `focus`
 - `rubric`
 - `coaching`
 - `evidence`

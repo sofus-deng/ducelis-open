@@ -32,6 +32,8 @@ export type ScenarioPackV1 = {
   learnerRole: string;
   participants: ScenarioPackParticipant[];
   successCriteria: string[];
+  context?: string;
+  focus?: string;
   sourceRefs?: ScenarioPackSourceRef[];
   runtime?: ScenarioPackRuntime;
 };
@@ -192,6 +194,14 @@ export function validateScenarioPackV1(raw: unknown): ValidationResult {
 
   if (!isNonEmptyStringArray(raw.successCriteria)) {
     errors.push("successCriteria must be a non-empty array of non-empty strings");
+  }
+
+  if (raw.context !== undefined && !isNonEmptyString(raw.context)) {
+    errors.push("context must be a non-empty string when present");
+  }
+
+  if (raw.focus !== undefined && !isNonEmptyString(raw.focus)) {
+    errors.push("focus must be a non-empty string when present");
   }
 
   if (raw.sourceRefs !== undefined) {
