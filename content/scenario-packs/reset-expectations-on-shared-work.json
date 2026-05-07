@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "ducelis.open.scenario-pack.v1",
+  "id": "reset-expectations-on-shared-work",
+  "version": 1,
+  "status": "published",
+  "visibility": "public",
+  "title": "Reset expectations on shared work",
+  "summary": "Practice a direct but respectful check-in when recurring handoff expectations are no longer aligned.",
+  "difficulty": "Moderate",
+  "estimatedMinutes": 15,
+  "tags": ["handoff", "expectations", "shared-work", "accountability"],
+  "learnerRole": "Contributor raising the concern",
+  "participants": [
+    {
+      "role": "Contributor",
+      "description": "Describes the coordination gap, restates the shared expectation, and asks for a workable agreement."
+    },
+    {
+      "role": "Collaborator",
+      "description": "Hears the concern, responds to the gap, and agrees on a path forward."
+    }
+  ],
+  "successCriteria": [
+    "Describe the coordination issue using neutral language.",
+    "Name the expected ownership or handoff point.",
+    "End with a simple agreement that both sides can follow."
+  ],
+  "runtime": {
+    "hint": "local-ollama"
+  }
+}

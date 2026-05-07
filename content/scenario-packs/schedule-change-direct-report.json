@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "ducelis.open.scenario-pack.v1",
+  "id": "schedule-change-direct-report",
+  "version": 1,
+  "status": "published",
+  "visibility": "public",
+  "title": "Review a schedule change with a direct report",
+  "summary": "Prepare for a short conversation about shifting ownership and timing after a routine scheduling change.",
+  "difficulty": "Foundational",
+  "estimatedMinutes": 10,
+  "tags": ["scheduling", "direct-report", "one-on-one", "clarification"],
+  "learnerRole": "Team lead initiating the conversation",
+  "participants": [
+    {
+      "role": "Team lead",
+      "description": "Explains the schedule adjustment, confirms understanding, and closes with clear next steps."
+    },
+    {
+      "role": "Direct report",
+      "description": "Receives the change, asks clarifying questions, and confirms what happens next."
+    }
+  ],
+  "successCriteria": [
+    "State the schedule change without ambiguity.",
+    "Acknowledge the likely impact on the other person.",
+    "Confirm the agreed next step before closing."
+  ],
+  "sourceRefs": [
+    {
+      "label": "Placeholder public-safe reference",
+      "url": "https://example.com/schedule-change-direct-report"
+    }
+  ]
+}
